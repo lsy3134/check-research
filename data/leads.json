@@ -1,0 +1,29 @@
+[
+  {
+    "id": "lead-seed-201",
+    "createdAt": "2026-10-19T14:23:05.000Z",
+    "isSeed": true,
+    "nickname": "김지현 (시연용샘플)",
+    "contact": "010-0000-1001",
+    "interviewAvailable": true,
+    "privacyConsent": true
+  },
+  {
+    "id": "lead-seed-202",
+    "createdAt": "2026-10-19T19:46:50.000Z",
+    "isSeed": true,
+    "nickname": "박서준 (시연용샘플)",
+    "contact": "카톡ID: sample_care02",
+    "interviewAvailable": true,
+    "privacyConsent": true
+  },
+  {
+    "id": "lead-seed-203",
+    "createdAt": "2026-10-20T01:13:12.000Z",
+    "isSeed": true,
+    "nickname": "이수민 (시연용샘플)",
+    "contact": "sample03@example.com",
+    "interviewAvailable": false,
+    "privacyConsent": true
+  }
+]

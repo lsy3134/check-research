@@ -1,0 +1,13 @@
+{
+  "name": "check-survey-app",
+  "version": "1.0.0",
+  "description": "1분 부모님 병원 동행 준비도 진단 & 가족 건강지갑 수요조사 웹앱 (Check)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

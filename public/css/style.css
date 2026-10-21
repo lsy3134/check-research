@@ -1,0 +1,1301 @@
+/* =========================================================
+   Check · 모바일 퍼스트 헬스케어 진단 & 수요조사 웹앱 스타일
+   최대 너비 480px 중앙 정렬, 카카오톡/인스타그램/스레드 인앱 최적화
+   ========================================================= */
+
+:root {
+  --teal-700: #0F766E;
+  --teal-600: #0D9488;
+  --teal-500: #14B8A6;
+  --teal-100: #CCFBF1;
+  --teal-50: #F0FDFA;
+
+  --coral-600: #EA580C;
+  --coral-500: #F97316;
+  --coral-400: #FB7185;
+  --coral-100: #FFEDD5;
+  --coral-50: #FFF7ED;
+
+  --bg-cream: #FAF8F5;
+  --surface: #FFFFFF;
+  --text-main: #1E293B;
+  --text-sub: #475569;
+  --text-muted: #64748B;
+  --border-light: #E2E8F0;
+
+  --radius-xl: 22px;
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --shadow-soft: 0 10px 30px -5px rgba(15, 23, 42, 0.06), 0 4px 12px -2px rgba(13, 148, 136, 0.05);
+  --shadow-card: 0 6px 20px rgba(15, 23, 42, 0.05);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  background-color: #EFECE6;
+  color: var(--text-main);
+  line-height: 1.55;
+  word-break: keep-all;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 모바일 앱 컨테이너 (480px 중앙 정렬) */
+.app-shell {
+  max-width: 480px;
+  min-height: 100vh;
+  margin: 0 auto;
+  background-color: var(--bg-cream);
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* 상단 고정 헤더 */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(250, 248, 245, 0.92);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.header-inner {
+  height: 56px;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.logo-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--teal-600), var(--teal-500));
+  box-shadow: 0 0 0 3px var(--teal-100);
+}
+
+.logo-text {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--teal-700);
+  letter-spacing: -0.02em;
+}
+
+.logo-sub {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: #F1F5F9;
+  padding: 2px 7px;
+  border-radius: 99px;
+}
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #FFFFFF;
+  border: 1px solid var(--border-light);
+  color: var(--text-sub);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 6px 11px;
+  border-radius: 99px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-icon:hover, .btn-icon:active {
+  background: var(--teal-50);
+  color: var(--teal-700);
+  border-color: var(--teal-500);
+}
+
+.quiz-step-badge {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--teal-700);
+  background: var(--teal-100);
+  padding: 4px 10px;
+  border-radius: 99px;
+}
+
+/* 프로그레스 바 */
+.progress-track {
+  width: 100%;
+  height: 5px;
+  background: #E2E8F0;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--teal-600), var(--teal-500));
+  border-radius: 0 4px 4px 0;
+  transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* 메인 뷰 전환 */
+.app-main {
+  flex: 1;
+  padding: 18px 16px 36px;
+}
+
+.view-section {
+  display: none;
+  animation: fadeSlideUp 0.38s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.view-section.active {
+  display: block;
+}
+
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==================== 1. 시작 화면 (Landing View) ==================== */
+.landing-card {
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  padding: 26px 20px 28px;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid rgba(13, 148, 136, 0.1);
+  text-align: center;
+}
+
+.top-pill-badge {
+  display: inline-block;
+  background: var(--teal-50);
+  color: var(--teal-700);
+  border: 1px solid var(--teal-100);
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 99px;
+  margin-bottom: 16px;
+}
+
+.landing-title {
+  font-size: 1.52rem;
+  line-height: 1.38;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.025em;
+  margin-bottom: 12px;
+}
+
+.highlight-teal {
+  color: var(--teal-600);
+  background: linear-gradient(180deg, transparent 62%, rgba(20, 184, 166, 0.2) 62%);
+}
+
+.landing-subtitle {
+  font-size: 0.94rem;
+  color: var(--text-sub);
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.landing-subtitle strong {
+  color: var(--text-main);
+  font-weight: 700;
+}
+
+.hero-image-wrap {
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 24px rgba(13, 148, 136, 0.12);
+  border: 1px solid var(--teal-100);
+  background: #F0FDFA;
+}
+
+.hero-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+}
+
+.hero-floating-tag {
+  background: rgba(15, 118, 110, 0.94);
+  color: #FFFFFF;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 9px 12px;
+  text-align: center;
+}
+
+.landing-meta-box {
+  background: #F8FAFC;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-bottom: 22px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.meta-icon {
+  font-size: 1.3rem;
+  width: 36px;
+  height: 36px;
+  background: #FFFFFF;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.meta-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.meta-text strong {
+  font-size: 0.88rem;
+  color: var(--text-main);
+}
+
+.meta-text span {
+  font-size: 0.79rem;
+  color: var(--text-muted);
+}
+
+.meta-divider {
+  height: 1px;
+  background: var(--border-light);
+}
+
+.btn-primary-cta {
+  width: 100%;
+  background: linear-gradient(135deg, var(--teal-600), var(--teal-500));
+  color: #FFFFFF;
+  border: none;
+  border-radius: 16px;
+  padding: 17px 20px;
+  font-size: 1.08rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(13, 148, 136, 0.28);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-primary-cta:hover, .btn-primary-cta:active {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(13, 148, 136, 0.36);
+}
+
+.landing-footnote {
+  margin-top: 14px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.landing-footnote strong {
+  color: var(--teal-700);
+}
+
+/* ==================== 2. 진단 설문 화면 (Quiz View) ==================== */
+.quiz-container {
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  padding: 24px 18px 26px;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.quiz-container.fade-out {
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+.quiz-category-tag {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--teal-700);
+  background: var(--teal-50);
+  border: 1px solid var(--teal-100);
+  padding: 4px 12px;
+  border-radius: 99px;
+  margin-bottom: 12px;
+}
+
+.quiz-scene-box {
+  background: #FFFBEB;
+  border-left: 4px solid #F59E0B;
+  padding: 11px 13px;
+  border-radius: 8px;
+  font-size: 0.86rem;
+  color: #78350F;
+  font-weight: 600;
+  margin-bottom: 14px;
+  line-height: 1.48;
+}
+
+.quiz-question-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1.45;
+  margin-bottom: 20px;
+  letter-spacing: -0.02em;
+}
+
+.options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.option-card {
+  width: 100%;
+  text-align: left;
+  background: #F8FAFC;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 15px;
+  padding: 15px 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  transition: all 0.18s ease;
+  font-family: inherit;
+}
+
+.option-card:hover {
+  border-color: var(--teal-500);
+  background: var(--teal-50);
+}
+
+.option-card.selected {
+  border-color: var(--teal-600);
+  background: var(--teal-50);
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.18);
+  transform: scale(0.99);
+}
+
+.option-emoji {
+  font-size: 1.35rem;
+  line-height: 1.2;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.option-content {
+  flex: 1;
+}
+
+.option-headline {
+  display: block;
+  font-size: 0.96rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.option-desc {
+  display: block;
+  font-size: 0.84rem;
+  color: var(--text-sub);
+  line-height: 1.45;
+}
+
+/* ==================== 3. 진단 결과 화면 (Result View) ==================== */
+.result-hero-card {
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  padding: 24px 18px;
+  box-shadow: var(--shadow-soft);
+  border: 1.5px solid var(--teal-100);
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.result-top-ribbon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.type-pill {
+  background: var(--teal-600);
+  color: #FFFFFF;
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 4px 11px;
+  border-radius: 99px;
+}
+
+.score-pill {
+  background: #F1F5F9;
+  color: var(--text-sub);
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 4px 11px;
+  border-radius: 99px;
+}
+
+.result-emoji-avatar {
+  width: 68px;
+  height: 68px;
+  margin: 0 auto 10px;
+  background: var(--teal-50);
+  border: 2px solid var(--teal-100);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+}
+
+.result-type-subtitle {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.result-type-title {
+  font-size: 1.38rem;
+  font-weight: 800;
+  color: var(--teal-700);
+  margin-bottom: 10px;
+  line-height: 1.35;
+}
+
+.result-nickname {
+  background: #F8FAFC;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 18px;
+  line-height: 1.45;
+}
+
+.result-empathy-box {
+  text-align: left;
+  background: #FAF8F5;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 15px;
+  margin-bottom: 14px;
+}
+
+.box-label {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--teal-700);
+  margin-bottom: 6px;
+}
+
+.box-label.coral {
+  color: var(--coral-600);
+}
+
+.result-empathy-box p {
+  font-size: 0.89rem;
+  color: var(--text-sub);
+  line-height: 1.62;
+}
+
+.result-prescription-box {
+  text-align: left;
+  background: var(--coral-50);
+  border: 1px solid var(--coral-100);
+  border-radius: 14px;
+  padding: 15px;
+}
+
+.prescription-headline {
+  font-size: 0.94rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 6px;
+  line-height: 1.45;
+}
+
+.prescription-body {
+  font-size: 0.87rem;
+  color: var(--text-sub);
+  line-height: 1.58;
+}
+
+/* 3-2. 병원 방문 준비 카드 샘플 미리보기 (Aha-moment) */
+.sample-preview-section,
+.tips-section {
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  padding: 22px 18px;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border-light);
+  margin-bottom: 20px;
+}
+
+.section-header-tag {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--teal-700);
+  background: var(--teal-50);
+  padding: 4px 10px;
+  border-radius: 99px;
+  margin-bottom: 8px;
+}
+
+.section-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.section-desc {
+  font-size: 0.86rem;
+  color: var(--text-sub);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.med-prep-card-mockup {
+  border: 2px solid var(--teal-500);
+  border-radius: 16px;
+  overflow: hidden;
+  background: #FFFFFF;
+  box-shadow: 0 8px 24px rgba(13, 148, 136, 0.12);
+}
+
+.mockup-header {
+  background: linear-gradient(135deg, var(--teal-700), var(--teal-600));
+  color: #FFFFFF;
+  padding: 14px 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.patient-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 8px;
+  border-radius: 99px;
+  margin-bottom: 3px;
+}
+
+.mockup-patient-info h4 {
+  font-size: 0.98rem;
+  font-weight: 800;
+}
+
+.age-text {
+  font-size: 0.78rem;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.mockup-qr-badge {
+  background: #FFFFFF;
+  color: var(--teal-700);
+  font-size: 0.74rem;
+  font-weight: 800;
+  padding: 5px 9px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.mockup-body {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mockup-block {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.mockup-block-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--text-main);
+  margin-bottom: 8px;
+}
+
+.dot-teal {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--teal-600);
+}
+
+.dot-coral {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--coral-500);
+}
+
+.mockup-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.m-tag {
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  color: var(--text-main);
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 99px;
+}
+
+.mockup-symptom-note {
+  font-size: 0.81rem;
+  color: var(--text-sub);
+  background: #FFFFFF;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border-left: 3px solid var(--teal-500);
+}
+
+.mockup-drug-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.drug-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 0.79rem;
+  font-weight: 600;
+}
+
+.drug-row.safe {
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+}
+
+.drug-row.warn {
+  background: #FFF7ED;
+  border: 1px solid #FED7AA;
+}
+
+.drug-status {
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 99px;
+  flex-shrink: 0;
+}
+
+.drug-status.ok {
+  background: #DCFCE7;
+  color: #15803D;
+}
+
+.drug-status.caution {
+  background: #FFEDD5;
+  color: #C2410C;
+}
+
+.mockup-ai-alert {
+  font-size: 0.79rem;
+  color: #9A3412;
+  background: #FFFBEB;
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+
+.mockup-question-list {
+  padding-left: 18px;
+  font-size: 0.82rem;
+  color: var(--text-sub);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.mockup-footer {
+  background: var(--teal-50);
+  color: var(--teal-700);
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 9px;
+  border-top: 1px solid var(--teal-100);
+}
+
+/* 3-3. 병원 방문 전 필수 체크 팁 3가지 */
+.tips-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tip-card {
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  background: #FAFAFA;
+  overflow: hidden;
+}
+
+.tip-card-header {
+  padding: 13px 14px;
+  background: #FFFFFF;
+  border-bottom: 1px solid #F1F5F9;
+}
+
+.tip-check-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.tip-checkbox {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: var(--teal-600);
+  flex-shrink: 0;
+}
+
+.tip-title-text {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.4;
+}
+
+.tip-title-text strong {
+  color: var(--teal-700);
+}
+
+.tip-card-body {
+  padding: 13px 14px;
+  font-size: 0.84rem;
+  color: var(--text-sub);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tip-bullet-list {
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.magic-questions-box {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.magic-questions-box strong {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--teal-700);
+  margin-bottom: 5px;
+}
+
+.magic-questions-box ol {
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.81rem;
+}
+
+.tip-type-highlight {
+  background: var(--teal-50);
+  border: 1px solid var(--teal-100);
+  color: var(--teal-700);
+  padding: 9px 11px;
+  border-radius: 10px;
+  font-size: 0.81rem;
+  line-height: 1.48;
+}
+
+/* 3-4. 선착순 베타 테스터 & 무료 병원 방문 준비 카드 신청 폼 */
+.lead-form-section {
+  margin-bottom: 22px;
+}
+
+.lead-card {
+  background: linear-gradient(180deg, #FFFFFF 0%, #FFFDFB 100%);
+  border: 2px solid var(--coral-500);
+  border-radius: var(--radius-xl);
+  padding: 24px 18px;
+  box-shadow: 0 12px 30px rgba(249, 115, 22, 0.12);
+}
+
+.lead-badge-coral {
+  display: inline-block;
+  background: var(--coral-100);
+  color: var(--coral-600);
+  font-size: 0.8rem;
+  font-weight: 800;
+  padding: 5px 12px;
+  border-radius: 99px;
+  margin-bottom: 14px;
+}
+
+.lead-illust-wrap {
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 14px;
+  border: 1px solid var(--coral-100);
+}
+
+.lead-illust-img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.lead-exact-copy {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--text-main);
+  background: var(--coral-50);
+  border: 1px solid var(--coral-100);
+  padding: 14px;
+  border-radius: 14px;
+  line-height: 1.55;
+  margin-bottom: 12px;
+}
+
+.lead-exact-copy strong {
+  color: var(--coral-600);
+}
+
+.lead-benefit-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.lead-benefit-chips span {
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: var(--teal-50);
+  color: var(--teal-700);
+  padding: 4px 10px;
+  border-radius: 99px;
+}
+
+.beta-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.form-label .req {
+  color: var(--coral-600);
+  font-size: 0.78rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1.5px solid #CBD5E1;
+  border-radius: 12px;
+  font-size: 0.94rem;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--teal-600);
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.14);
+}
+
+.form-helper-text {
+  font-size: 0.77rem;
+  color: var(--text-muted);
+}
+
+.form-check-box {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.check-row-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  cursor: pointer;
+}
+
+.check-row-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: var(--teal-600);
+  flex-shrink: 0;
+}
+
+.check-text {
+  font-size: 0.84rem;
+  color: var(--text-main);
+  line-height: 1.45;
+}
+
+.reward-tag {
+  color: var(--coral-600);
+  font-weight: 700;
+}
+
+.privacy-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.btn-privacy-toggle {
+  background: none;
+  border: none;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-decoration: underline;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.privacy-detail {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #CBD5E1;
+  font-size: 0.76rem;
+  color: var(--text-sub);
+  line-height: 1.5;
+}
+
+.privacy-detail ul {
+  padding-left: 16px;
+  margin-top: 4px;
+}
+
+.form-error {
+  background: #FEF2F2;
+  color: #DC2626;
+  font-size: 0.83rem;
+  font-weight: 700;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #FECACA;
+}
+
+.btn-submit-coral {
+  width: 100%;
+  background: linear-gradient(135deg, var(--coral-500), var(--coral-400));
+  color: #FFFFFF;
+  border: none;
+  border-radius: 14px;
+  padding: 16px;
+  font-size: 1.02rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(249, 115, 22, 0.28);
+  transition: transform 0.15s ease;
+}
+
+.btn-submit-coral:hover, .btn-submit-coral:active {
+  transform: translateY(-1px);
+}
+
+.btn-submit-coral:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* 공유 및 다시 시작 */
+.share-restart-box {
+  text-align: center;
+  padding: 10px 4px;
+}
+
+.share-prompt {
+  font-size: 0.85rem;
+  color: var(--text-sub);
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.share-btn-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.btn-secondary-share {
+  width: 100%;
+  background: #FFFFFF;
+  border: 1.5px solid var(--teal-600);
+  color: var(--teal-700);
+  padding: 13px;
+  border-radius: 13px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-ghost-restart {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* 푸터 */
+.app-footer {
+  padding: 20px 16px 28px;
+  text-align: center;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  border-top: 1px solid #E2E8F0;
+}
+
+.footer-disclaimer-highlight {
+  background: #F1F5F9;
+  color: #334155;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.48;
+  border: 1px solid #CBD5E1;
+}
+
+.footer-sub {
+  margin-top: 4px;
+  font-size: 0.72rem;
+}
+
+/* 비진단 안내 및 개인정보 비수집 강조 배너 */
+.non-diagnostic-notice-box {
+  background: #F8FAFC;
+  border: 1px solid #CBD5E1;
+  border-radius: 12px;
+  padding: 11px 13px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #334155;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.result-top-disclaimer-banner {
+  background: #F0FDFA;
+  border: 1.5px solid var(--teal-500);
+  border-radius: 16px;
+  padding: 14px 15px;
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.habit-classify-notice {
+  font-size: 0.86rem;
+  color: var(--teal-700);
+  font-weight: 700;
+  margin-bottom: 6px;
+  line-height: 1.45;
+}
+
+.non-medical-sub {
+  font-size: 0.77rem;
+  color: #475569;
+  line-height: 1.45;
+}
+
+.mockup-consent-bar {
+  background: #FFFBEB;
+  border-bottom: 1px solid #FDE68A;
+  color: #92400E;
+  font-size: 0.77rem;
+  padding: 9px 14px;
+  line-height: 1.4;
+}
+
+.sensitive-no-collect-banner {
+  background: #ECFDF5;
+  border: 1.5px solid #10B981;
+  color: #065F46;
+  padding: 11px 13px;
+  border-radius: 12px;
+  font-size: 0.83rem;
+  margin-bottom: 16px;
+  line-height: 1.45;
+}
+
+/* 모달 */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-card {
+  max-width: 400px;
+  width: 100%;
+  background: #FFFFFF;
+  border-radius: 22px;
+  padding: 28px 22px;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  animation: fadeSlideUp 0.25s ease;
+}
+
+.modal-icon {
+  font-size: 2.6rem;
+  margin-bottom: 10px;
+}
+
+.modal-title {
+  font-size: 1.22rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.modal-desc {
+  font-size: 0.88rem;
+  color: var(--text-sub);
+  line-height: 1.58;
+  margin-bottom: 20px;
+}
+
+.modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.btn-modal-close {
+  background: #F1F5F9;
+  border: none;
+  color: var(--text-sub);
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* 토스트 */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.92);
+  color: #FFFFFF;
+  padding: 12px 18px;
+  border-radius: 99px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  z-index: 200;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  white-space: nowrap;
+}

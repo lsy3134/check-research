@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Check 관리자 대시보드 · 분리 보관 통계 및 신청자 관리</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <style>
+    :root {
+      --teal-700: #0F766E;
+      --teal-600: #0D9488;
+      --teal-500: #14B8A6;
+      --teal-50: #F0FDFA;
+      --coral-600: #EA580C;
+      --coral-500: #F97316;
+      --coral-50: #FFF7ED;
+      --bg-page: #F1F5F9;
+      --surface: #FFFFFF;
+      --text-main: #0F172A;
+      --text-sub: #475569;
+      --text-muted: #64748B;
+      --border: #E2E8F0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      line-height: 1.5;
+      word-break: keep-all;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* ==================== 로그인 화면 ==================== */
+    .login-wrapper {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-card {
+      max-width: 420px;
+      width: 100%;
+      background: var(--surface);
+      border-radius: 20px;
+      padding: 36px 28px;
+      box-shadow: 0 15px 35px rgba(15, 23, 42, 0.08);
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .login-badge {
+      display: inline-block;
+      background: var(--teal-50);
+      color: var(--teal-700);
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 5px 12px;
+      border-radius: 99px;
+      margin-bottom: 12px;
+    }
+
+    .login-card h1 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .login-card p {
+      font-size: 0.88rem;
+      color: var(--text-sub);
+      margin-bottom: 22px;
+    }
+
+    .login-input {
+      width: 100%;
+      padding: 13px 15px;
+      border: 1.5px solid #CBD5E1;
+      border-radius: 12px;
+      font-size: 0.96rem;
+      font-family: inherit;
+      margin-bottom: 12px;
+    }
+
+    .login-input:focus {
+      outline: none;
+      border-color: var(--teal-600);
+      box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+    }
+
+    .btn-login {
+      width: 100%;
+      background: var(--teal-600);
+      color: #FFFFFF;
+      border: none;
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 0.98rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-login:hover {
+      background: var(--teal-700);
+    }
+
+    .login-error {
+      margin-top: 12px;
+      font-size: 0.84rem;
+      color: #DC2626;
+      font-weight: 600;
+    }
+
+    /* ==================== 대시보드 레이아웃 ==================== */
+    .admin-container {
+      max-width: 1220px;
+      margin: 0 auto;
+      padding: 28px 20px 60px;
+    }
+
+    .admin-header {
+      background: var(--surface);
+      border-radius: 18px;
+      padding: 22px 26px;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+    }
+
+    .admin-title-group h1 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .admin-title-group p {
+      font-size: 0.84rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .admin-header-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .btn-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 15px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: #FFFFFF;
+      color: var(--text-main);
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+
+    .btn-action:hover {
+      background: #F8FAFC;
+      border-color: #CBD5E1;
+    }
+
+    /* 시연용(Seed) vs 실제 응답(Real) 필터 토글 바 */
+    .filter-toggle-bar {
+      background: var(--surface);
+      border: 1.5px solid var(--teal-500);
+      border-radius: 16px;
+      padding: 16px 22px;
+      margin-bottom: 22px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .filter-info {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .filter-info strong {
+      font-size: 0.96rem;
+      color: var(--teal-700);
+    }
+
+    .filter-info span {
+      font-size: 0.81rem;
+      color: var(--text-sub);
+    }
+
+    .filter-tabs {
+      display: inline-flex;
+      background: #F1F5F9;
+      padding: 4px;
+      border-radius: 12px;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .filter-tab-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-sub);
+      font-size: 0.84rem;
+      font-weight: 700;
+      padding: 8px 14px;
+      border-radius: 9px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+
+    .filter-tab-btn.active {
+      background: var(--teal-600);
+      color: #FFFFFF;
+      box-shadow: 0 2px 6px rgba(13, 148, 136, 0.25);
+    }
+
+    /* KPI 카드 그리드 */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .kpi-card {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+    }
+
+    .kpi-label {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .kpi-value {
+      font-size: 1.85rem;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -0.02em;
+    }
+
+    .kpi-value.teal {
+      color: var(--teal-600);
+    }
+
+    .kpi-value.coral {
+      color: var(--coral-600);
+    }
+
+    .kpi-sub {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* CSV 다운로드 배너 */
+    .csv-export-bar {
+      background: linear-gradient(135deg, #0F766E, #0D9488);
+      color: #FFFFFF;
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin-bottom: 26px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .csv-info h2 {
+      font-size: 1.06rem;
+      font-weight: 800;
+      margin-bottom: 3px;
+    }
+
+    .csv-info p {
+      font-size: 0.82rem;
+      opacity: 0.92;
+    }
+
+    .csv-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .btn-csv {
+      background: #FFFFFF;
+      color: var(--teal-700);
+      border: none;
+      padding: 11px 16px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+      transition: transform 0.15s;
+    }
+
+    .btn-csv.leads-btn {
+      background: #FFF7ED;
+      color: #C2410C;
+    }
+
+    .btn-csv:hover {
+      transform: translateY(-1px);
+    }
+
+    /* 섹션 패널 */
+    .panel {
+      background: var(--surface);
+      border-radius: 18px;
+      padding: 24px;
+      border: 1px solid var(--border);
+      margin-bottom: 24px;
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
+    }
+
+    .panel-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .panel-title {
+      font-size: 1.12rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .panel-badge {
+      font-size: 0.78rem;
+      font-weight: 700;
+      background: var(--teal-50);
+      color: var(--teal-700);
+      padding: 4px 10px;
+      border-radius: 99px;
+    }
+
+    /* 습관 유형 분포 바 */
+    .type-dist-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+    }
+
+    .type-stat-box {
+      background: #F8FAFC;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .type-stat-top {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .bar-bg {
+      width: 100%;
+      height: 10px;
+      background: #E2E8F0;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--teal-600), var(--teal-500));
+      border-radius: 99px;
+      transition: width 0.4s ease;
+    }
+
+    .bar-fill.coral {
+      background: linear-gradient(90deg, var(--coral-600), var(--coral-500));
+    }
+
+    /* 문항별 차트 그리드 */
+    .questions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+      gap: 20px;
+    }
+
+    @media (max-width: 640px) {
+      .questions-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .q-stat-card {
+      background: #F8FAFC;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+    }
+
+    .q-stat-title {
+      font-size: 0.92rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 14px;
+      line-height: 1.45;
+    }
+
+    .q-opt-row {
+      margin-bottom: 11px;
+    }
+
+    .q-opt-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .q-opt-label-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.81rem;
+      margin-bottom: 4px;
+    }
+
+    .q-opt-text {
+      color: var(--text-sub);
+      font-weight: 600;
+    }
+
+    .q-opt-val {
+      font-weight: 800;
+      color: var(--teal-700);
+      flex-shrink: 0;
+    }
+
+    /* 테이블 공통 */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.84rem;
+      min-width: 780px;
+    }
+
+    .admin-table th,
+    .admin-table td {
+      padding: 12px 13px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .admin-table th {
+      background: #F8FAFC;
+      font-weight: 700;
+      color: var(--text-sub);
+      font-size: 0.79rem;
+    }
+
+    .admin-table tbody tr:hover {
+      background: #F8FAFC;
+    }
+
+    .badge-yes {
+      display: inline-block;
+      background: #DCFCE7;
+      color: #15803D;
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 99px;
+    }
+
+    .badge-no {
+      display: inline-block;
+      background: #F1F5F9;
+      color: #64748B;
+      font-size: 0.74rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 99px;
+    }
+
+    .badge-seed {
+      display: inline-block;
+      background: #FEF3C7;
+      color: #92400E;
+      font-size: 0.73rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid #FDE68A;
+    }
+
+    .badge-real {
+      display: inline-block;
+      background: #DBEAFE;
+      color: #1E40AF;
+      font-size: 0.73rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid #BFDBFE;
+    }
+
+    .btn-delete-row {
+      background: #FEF2F2;
+      color: #DC2626;
+      border: 1px solid #FECACA;
+      padding: 5px 10px;
+      border-radius: 8px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-delete-row:hover {
+      background: #DC2626;
+      color: #FFFFFF;
+    }
+  </style>
+</head>
+<body>
+  <!-- ==================== 관리자 비밀번호 인증 화면 ==================== -->
+  <!-- 로컬 데모 테스트용 기본 비밀번호 힌트: check2026! (환경변수 ADMIN_PASSWORD 설정 지원) -->
+  <div id="admin-login-view" class="login-wrapper">
+    <div class="login-card">
+      <span class="login-badge">🔐 보안 분리 관리자 전용 (/admin)</span>
+      <h1>Check 관리자 대시보드</h1>
+      <p>분리 보관된 설문 응답 통계(`responses.json`) 및 초기 테스트 신청자 명단(`leads.json`)을 열람하려면 관리자 비밀번호를 입력해 주세요.</p>
+      <form id="admin-login-form">
+        <input
+          type="password"
+          id="admin-password-input"
+          class="login-input"
+          placeholder="관리자 비밀번호 입력"
+          required
+          autocomplete="current-password"
+        />
+        <button type="submit" class="btn-login">대시보드 접속하기</button>
+      </form>
+      <p id="admin-login-error" class="login-error hidden"></p>
+    </div>
+  </div>
+
+  <!-- ==================== 관리자 메인 대시보드 ==================== -->
+  <div id="admin-dashboard-view" class="admin-container hidden">
+    <header class="admin-header">
+      <div class="admin-title-group">
+        <h1>🌿 Check 수요조사 & 초기 테스트 신청 관리자 대시보드</h1>
+        <p>설문 통계(`data/responses.json`)와 신청자 연락처(`data/leads.json`)가 물리적으로 분리 보관됩니다.</p>
+      </div>
+      <div class="admin-header-actions">
+        <button type="button" id="btn-refresh-stats" class="btn-action">🔄 실시간 새로고침</button>
+        <button type="button" id="btn-reset-seed" class="btn-action">🧪 시연용 샘플 데이터 초기화</button>
+        <button type="button" id="btn-logout" class="btn-action">로그아웃</button>
+      </div>
+    </header>
+
+    <!-- 데이터 보기 필터 토글 바 (전체 | 실제 고객 응답 Real | 시연용 가상 데이터 Seed) -->
+    <section class="filter-toggle-bar">
+      <div class="filter-info">
+        <strong>🔍 시연용 가상 데이터(Seed) vs 실제 고객 응답(Real) 구분 필터</strong>
+        <span id="filter-status-desc">현재 전체 데이터를 표시하고 있습니다. 부트캠프 시연 및 실제 수요 검증 데이터를 즉시 분리해 확인할 수 있습니다.</span>
+      </div>
+      <div class="filter-tabs" role="tablist">
+        <button type="button" class="filter-tab-btn active" data-filter="all" id="tab-filter-all">
+          전체 보기 (0)
+        </button>
+        <button type="button" class="filter-tab-btn" data-filter="real" id="tab-filter-real">
+          실제 고객 응답만 (Real: 0)
+        </button>
+        <button type="button" class="filter-tab-btn" data-filter="seed" id="tab-filter-seed">
+          시연용 가상 데이터만 (Seed: 0)
+        </button>
+      </div>
+    </section>
+
+    <!-- 1. 핵심 요약 KPI 카드 5종 -->
+    <section class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">설문 응답 수 (`responses.json`)</div>
+        <div class="kpi-value teal" id="kpi-total-responses">0명</div>
+        <div class="kpi-sub">개인정보 없는 순수 익명 통계</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">초기 테스트 신청자 (`leads.json`)</div>
+        <div class="kpi-value coral" id="kpi-total-leads">0명</div>
+        <div class="kpi-sub">설문 응답과 물리적 분리 보관</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">초기 테스트 전환율</div>
+        <div class="kpi-value" id="kpi-conversion-rate">0%</div>
+        <div class="kpi-sub">설문 완료 대비 신청 비율</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">10분 비대면 인터뷰 가능 인원</div>
+        <div class="kpi-value teal" id="kpi-interview-count">0명</div>
+        <div class="kpi-sub">가상 건강정보 시제품 인터뷰 대상</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">가족 접근권한·동의 중요 응답률</div>
+        <div class="kpi-value coral" id="kpi-consent-rate">0%</div>
+        <div class="kpi-sub" id="kpi-consent-sub">Q4 사전동의/선택공유/카드공유 비율</div>
+      </div>
+    </section>
+
+    <!-- 2. 엑셀(CSV) 다운로드 바 (UTF-8 BOM 한글 완벽 호환 + 현재 필터 반영) -->
+    <section class="csv-export-bar">
+      <div class="csv-info">
+        <h2>📥 분리 보관 데이터 엑셀(CSV) 다운로드 (UTF-8 BOM 적용)</h2>
+        <p>현재 선택된 필터(전체 / 실제 응답 Real / 시연용 Seed) 기준으로 익명 설문 통계와 신청자 명단을 각각 다운로드합니다.</p>
+      </div>
+      <div class="csv-buttons">
+        <button type="button" id="btn-export-responses" class="btn-csv">
+          📊 익명 설문 응답 통계 CSV 다운로드
+        </button>
+        <button type="button" id="btn-export-leads" class="btn-csv leads-btn">
+          📇 초기 테스트 신청자 연락처 명단 CSV 다운로드
+        </button>
+      </div>
+    </section>
+
+    <!-- 3. 4가지 부모님 건강기록 관리 습관 유형 분포 -->
+    <section class="panel">
+      <div class="panel-header">
+        <h2 class="panel-title">🏆 부모님 건강기록 관리 습관 유형 분포 (비진단 분류)</h2>
+        <span class="panel-badge">Q1~Q4 점수 합산 기준</span>
+      </div>
+      <div class="type-dist-grid" id="type-stats-container">
+        <!-- JS 렌더링 -->
+      </div>
+    </section>
+
+    <!-- 4. Q1~Q6 문항별 응답 통계 시각화 차트 -->
+    <section class="panel">
+      <div class="panel-header">
+        <h2 class="panel-title">📈 Q1 ~ Q6 문항별 응답 비율 차트</h2>
+        <span class="panel-badge">비진단 기록 정리 · 건강 캘린더 · 가족 접근권한/동의 검증</span>
+      </div>
+      <div class="questions-grid" id="question-stats-container">
+        <!-- JS 렌더링 -->
+      </div>
+    </section>
+
+    <!-- 5. 초기 테스트 & 인터뷰 신청자 명단 (data/leads.json 분리 보관 + 개별 즉시 삭제 기능) -->
+    <section class="panel">
+      <div class="panel-header">
+        <h2 class="panel-title">💌 초기 테스트 & 인터뷰 신청자 명단 (`data/leads.json` 분리 보관)</h2>
+        <span class="panel-badge" id="leads-count-badge">총 0건</span>
+      </div>
+      <div class="table-responsive">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>데이터 구분</th>
+              <th>신청 일시</th>
+              <th>닉네임</th>
+              <th>연락처 (휴대폰/카톡ID/이메일)</th>
+              <th>10분 인터뷰 가능 여부</th>
+              <th>개인정보 동의</th>
+              <th>개인정보 즉시 파기</th>
+            </tr>
+          </thead>
+          <tbody id="leads-table-body">
+            <!-- JS 렌더링 -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 6. 익명 설문 응답 원본 목록 (data/responses.json) -->
+    <section class="panel">
+      <div class="panel-header">
+        <h2 class="panel-title">🗂️ 익명 설문 응답 내역 (`data/responses.json` · 개인식별정보 없음)</h2>
+        <span class="panel-badge" id="responses-count-badge">총 0건</span>
+      </div>
+      <div class="table-responsive">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>데이터 구분</th>
+              <th>참여 일시</th>
+              <th>습관 유형 분류 (비진단)</th>
+              <th>점수</th>
+              <th>Q4 접근권한·동의 선호</th>
+              <th>Q5 핵심 기능 1순위</th>
+              <th>Q6 선호 이용 방식</th>
+            </tr>
+          </thead>
+          <tbody id="responses-table-body">
+            <!-- JS 렌더링 -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script src="/js/admin.js"></script>
+</body>
+</html>

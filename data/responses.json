@@ -1,0 +1,98 @@
+[
+  {
+    "id": "resp-1792499706693-21da",
+    "createdAt": "2026-10-20T12:35:06.693Z",
+    "isSeed": false,
+    "answers": {
+      "Q1": "future_concern",
+      "Q2": "share_none",
+      "Q3": "organize_scattered",
+      "Q4": "auth_unsure",
+      "Q5": "feat_med_summary",
+      "Q6": "biz_ad_free"
+    },
+    "totalScore": 4,
+    "habitType": "type1",
+    "habitTypeName": "마음만은 든든, 기록 정리는 막막한 효심형"
+  },
+  {
+    "id": "resp-seed-101",
+    "createdAt": "2026-10-19T14:22:10.000Z",
+    "isSeed": true,
+    "answers": {
+      "Q1": "pain_recall",
+      "Q2": "share_kakao",
+      "Q3": "organize_scattered",
+      "Q4": "auth_selective",
+      "Q5": "feat_visit_card",
+      "Q6": "biz_pay_per_use"
+    },
+    "totalScore": 8,
+    "habitType": "type2",
+    "habitTypeName": "사진첩·단톡방 스크롤 탐정형"
+  },
+  {
+    "id": "resp-seed-102",
+    "createdAt": "2026-10-19T19:45:32.000Z",
+    "isSeed": true,
+    "answers": {
+      "Q1": "pain_scattered",
+      "Q2": "share_calendar_memo",
+      "Q3": "organize_complex",
+      "Q4": "auth_selective",
+      "Q5": "feat_med_summary",
+      "Q6": "biz_subscription"
+    },
+    "totalScore": 11,
+    "habitType": "type3",
+    "habitTypeName": "수첩·메모장 꼼꼼 기록 매니저형"
+  },
+  {
+    "id": "resp-seed-103",
+    "createdAt": "2026-10-20T01:12:05.000Z",
+    "isSeed": true,
+    "answers": {
+      "Q1": "pain_recall",
+      "Q2": "share_none",
+      "Q3": "organize_scattered",
+      "Q4": "auth_card_only",
+      "Q5": "feat_health_calendar",
+      "Q6": "biz_ad_free"
+    },
+    "totalScore": 6,
+    "habitType": "type1",
+    "habitTypeName": "마음만은 든든, 기록 정리는 막막한 효심형"
+  },
+  {
+    "id": "resp-seed-104",
+    "createdAt": "2026-10-20T05:30:18.000Z",
+    "isSeed": true,
+    "answers": {
+      "Q1": "pain_question",
+      "Q2": "share_album",
+      "Q3": "organize_complex",
+      "Q4": "auth_full_consent",
+      "Q5": "feat_privacy_control",
+      "Q6": "biz_pay_per_use"
+    },
+    "totalScore": 9,
+    "habitType": "type2",
+    "habitTypeName": "사진첩·단톡방 스크롤 탐정형"
+  },
+  {
+    "id": "resp-seed-105",
+    "createdAt": "2026-10-20T09:15:44.000Z",
+    "isSeed": true,
+    "answers": {
+      "Q1": "no_pain",
+      "Q2": "share_cloud_app",
+      "Q3": "organize_timeline",
+      "Q4": "auth_selective",
+      "Q5": "feat_visit_card",
+      "Q6": "biz_subscription"
+    },
+    "totalScore": 15,
+    "habitType": "type4",
+    "habitTypeName": "체계적인 스마트 동행 기록 프로형"
+  }
+]
