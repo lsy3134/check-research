@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: check-survey-app
+    name: check-research
     runtime: node
     plan: free
     buildCommand: npm install
