@@ -3,13 +3,128 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Check · 1분 부모님 건강기록 관리 습관 유형 체크</title>
-  <meta name="description" content="1분 만에 우리 가족의 부모님 건강기록 관리 습관 유형을 확인하고, 진료 전 기록을 한 장으로 모아주는 병원 방문 준비 카드를 만나보세요." />
-  <meta property="og:title" content="Check · 1분 부모님 건강기록 관리 습관 유형 체크" />
-  <meta property="og:description" content="가족이 입력한 복약·진료기록을 읽기 쉽게 정리하는 비진단 보조 도구 Check 수요조사에 참여해 보세요." />
+  <title>우리 부모님 병원·약 챙김 테스트 (1분 확인)</title>
+  <meta name="description" content="사진첩과 단톡방에 흩어진 약봉투와 증상 메모... 진료실 앞에서 당황하지 않는 기록 습관을 확인해 보세요." />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="우리 부모님 병원·약 챙김 테스트 (1분 확인)" />
+  <meta property="og:description" content="사진첩과 단톡방에 흩어진 약봉투와 증상 메모... 진료실 앞에서 당황하지 않는 기록 습관을 확인해 보세요." />
   <meta property="og:image" content="/images/hero_illustration.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="우리 부모님 병원·약 챙김 테스트 (1분 확인)" />
+  <meta name="twitter:description" content="사진첩과 단톡방에 흩어진 약봉투와 증상 메모... 진료실 앞에서 당황하지 않는 기록 습관을 확인해 보세요." />
+  <meta name="twitter:image" content="/images/hero_illustration.jpg" />
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
   <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    /* 첫 화면(인트로) 심플 & 한눈에 들어오는 모바일 최적화 스타일 */
+    #view-landing .landing-card {
+      padding: 24px 18px 24px;
+    }
+    #view-landing .top-pill-badge {
+      font-size: 0.82rem;
+      font-weight: 800;
+      padding: 6px 14px;
+      margin-bottom: 14px;
+    }
+    #view-landing .landing-title {
+      font-size: 1.72rem;
+      line-height: 1.32;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      margin-bottom: 14px;
+      text-align: center;
+    }
+    .intro-hashtag-rows {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .hashtag-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+    }
+    .hashtag-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 13px;
+      border-radius: 999px;
+      font-size: 0.81rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+    .hashtag-pill.purple {
+      background: #F3E8FF;
+      color: #6B21A8;
+      border: 1px solid #E9D5FF;
+    }
+    .hashtag-pill.blue {
+      background: #DBEAFE;
+      color: #1E40AF;
+      border: 1px solid #BFDBFE;
+    }
+    .hashtag-pill.orange {
+      background: #FFEDD5;
+      color: #C2410C;
+      border: 1px solid #FED7AA;
+    }
+    .hashtag-pill.yellow {
+      background: #FEF9C3;
+      color: #854D0E;
+      border: 1px solid #FEF08A;
+    }
+    .hero-image-stage {
+      position: relative;
+      margin-bottom: 24px;
+    }
+    #view-landing .hero-image-wrap {
+      margin-bottom: 0;
+      border-radius: 18px;
+      overflow: hidden;
+    }
+    .hero-participant-capsule {
+      position: absolute;
+      left: 50%;
+      bottom: -14px;
+      transform: translateX(-50%);
+      background: #FFFFFF;
+      color: #0F172A;
+      border: 1.5px solid #E2E8F0;
+      border-radius: 999px;
+      padding: 7px 18px;
+      font-size: 0.85rem;
+      font-weight: 800;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+      white-space: nowrap;
+      z-index: 5;
+    }
+    .hero-participant-capsule strong {
+      color: #EA580C;
+      font-weight: 900;
+    }
+    .landing-compact-capsule {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 999px;
+      padding: 10px 16px;
+      margin-bottom: 14px;
+      font-size: 0.83rem;
+      font-weight: 700;
+      color: #334155;
+      white-space: nowrap;
+    }
+    .landing-compact-capsule .capsule-divider {
+      color: #CBD5E1;
+      font-weight: 400;
+    }
+  </style>
 </head>
 <body>
   <div class="app-shell">
@@ -41,54 +156,49 @@
       <section id="view-landing" class="view-section active">
         <div class="landing-card">
           <div class="top-pill-badge">
-            <span>🌿 Check · 가족이 함께 정리하는 비진단 AI 건강기록 지갑</span>
+            <span>🌱 Check · 비진단 가족 건강기록 지갑</span>
           </div>
 
           <h1 class="landing-title">
-            부모님 모시고 간 진료실,<br />
-            <span class="highlight-teal">“이전 약이나 증상 기록”</span><br />
-            바로 꺼내 보기 편하셨나요?
+            우리 부모님<br />
+            <span class="highlight-teal">병원·약 챙김 테스트</span><br />
+            1분 만에 확인하기 👇
           </h1>
 
-          <p class="landing-subtitle">
-            사진첩과 단톡방에 흩어진 약봉투 사진, 날짜별 증상 메모...<br />
-            부모님의 소중한 건강기록을 안전하게 모아 정리하는<br />
-            <strong>우리 가족의 건강기록 관리 습관 유형</strong>을 확인해 보세요.
-          </p>
-
-          <div class="hero-image-wrap">
-            <img src="/images/hero_illustration.jpg" alt="부모님과 자녀가 따뜻하게 건강기록을 정리하는 모습" class="hero-image" />
-            <div class="hero-floating-tag">
-              <span>📋 날짜별 건강 캘린더 · 복약 기록 요약 · 가족별 공유 범위 설정</span>
+          <!-- 알록달록한 해시태그 알약(Pill) 뱃지 4개 (2줄 구성) -->
+          <div class="intro-hashtag-rows">
+            <div class="hashtag-row">
+              <span class="hashtag-pill purple">#사진첩_스크롤탐정형</span>
+              <span class="hashtag-pill blue">#단톡방_묻히기형</span>
+            </div>
+            <div class="hashtag-row">
+              <span class="hashtag-pill orange">#기억력_의존형</span>
+              <span class="hashtag-pill yellow">#완벽준비_효자효녀형</span>
             </div>
           </div>
 
-          <div class="landing-meta-box">
-            <div class="meta-item">
-              <span class="meta-icon">⏱️</span>
-              <div class="meta-text">
-                <strong>소요 시간 약 1분 (객관식 6문항)</strong>
-                <span>부모님 건강기록 정리 및 가족 공유 습관을 가볍게 점검해요</span>
-              </div>
+          <!-- 3D 가족 일러스트 및 하단 중앙 떠오르는 참여자 수 캡슐 뱃지 -->
+          <div class="hero-image-stage">
+            <div class="hero-image-wrap">
+              <img src="/images/hero_illustration.jpg" alt="부모님과 자녀가 따뜻하게 건강기록을 정리하는 모습" class="hero-image" />
             </div>
-            <div class="meta-divider"></div>
-            <div class="meta-item">
-              <span class="meta-icon">🔒</span>
-              <div class="meta-text">
-                <strong>부모님 건강기록 관리 습관 유형 무료 안내</strong>
-                <span>병원 방문 전 기록 정리 필수 체크 팁 3가지 함께 제공</span>
-              </div>
+            <div class="hero-participant-capsule">
+              <span>🔥 현재 <strong id="live-participant-count">128</strong>명 참여 중</span>
             </div>
+          </div>
+
+          <!-- 1줄 가로형 캡슐 안내 박스 -->
+          <div class="landing-compact-capsule">
+            <span>⏱️ 딱 1분 (6문항)</span>
+            <span class="capsule-divider">|</span>
+            <span>🔒 가볍게 점검 (로그인 없음)</span>
           </div>
 
           <button id="btn-start-quiz" type="button" class="btn-primary-cta">
-            <span>1분 건강기록 습관 체크 시작하기</span>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M5 12h14M12 5l7 7-7 7"/>
-            </svg>
+            <span>30초 만에 우리 가족 유형 확인하기 →</span>
           </button>
 
-          <div class="non-diagnostic-notice-box" style="margin-top: 16px;">
+          <div class="non-diagnostic-notice-box" style="margin-top: 14px;">
             ※ Check의 AI는 질병 진단이나 의학적 판단을 대신하지 않으며, 가족이 입력한 복약·진료기록을 읽기 쉽게 정리하는 비진단 보조 도구입니다.
           </div>
         </div>
@@ -118,7 +228,7 @@
         <!-- 상단 비진단 습관 분류 명시 배너 & 면책 고지 -->
         <div class="result-top-disclaimer-banner">
           <p class="habit-classify-notice">
-            📌 본 결과는 의학적 진단이 아닌 설문 응답 기반의 <strong>‘부모님 건강기록 관리 습관 유형’</strong> 분류입니다.
+            📌 본 결과는 설문 응답에 기반한 <strong>‘부모님 건강기록 관리 습관 유형’</strong> 안내이며, <strong>의학적 진단이나 실제 건강관리 능력을 평가한 결과는 아닙니다.</strong>
           </p>
           <p class="non-medical-sub">
             ※ Check의 AI는 질병 진단이나 의학적 판단을 대신하지 않으며, 가족이 입력한 복약·진료기록을 읽기 쉽게 정리하는 비진단 보조 도구입니다.
@@ -129,31 +239,42 @@
         <div class="result-hero-card">
           <div class="result-top-ribbon">
             <span id="result-type-badge" class="type-pill">건강기록 관리 습관 유형</span>
-            <span id="result-score-badge" class="score-pill">기록 준비도 11 / 16점</span>
+            <span id="result-score-badge" class="score-pill">설문 응답 기반 습관 안내</span>
           </div>
 
           <div class="result-emoji-avatar" id="result-emoji">📓</div>
-          <p class="result-type-subtitle">나의 부모님 건강기록 관리 습관 유형은</p>
-          <h2 class="result-type-title" id="result-title">수첩·메모장 꼼꼼 기록 매니저형</h2>
+          <p class="result-type-subtitle">설문 응답으로 살펴본 우리 가족의 기록 방식은</p>
+          <h2 class="result-type-title" id="result-title">사진첩·단톡방 스크롤 탐정형</h2>
           <p class="result-nickname" id="result-nickname">
-            “부모님 약 목록부터 진료 질문 메모까지 직접 적어두는 든든한 가족 기록 매니저!”
+            “부모님의 건강정보를 사진이나 가족 대화방을 통해 보관하고 확인하는 유형이에요.”
           </p>
 
           <div class="result-empathy-box">
-            <div class="box-label">💌 기록 관리 습관 공감 리포트</div>
+            <div class="box-label">📋 기록·보관 방식 안내</div>
             <p id="result-description">
-              가족 중에서 부모님의 건강 기록을 가장 주도적으로 챙기고 계시군요!
+              부모님의 건강정보를 사진이나 가족 대화방을 통해 보관하고 확인하는 유형이에요. 사진과 메시지를 활용하면 정보를 빠르게 남길 수 있어요. 기록을 다시 찾는 일이 불편했다면 날짜별로 정리하는 방법도 고려해 볼 수 있어요.
+            </p>
+            <p style="margin-top: 8px; font-size: 0.78rem; color: #64748B; font-weight: 600;">
+              * 의학적 진단이나 실제 건강관리 능력을 평가한 결과는 아닙니다.
             </p>
           </div>
 
           <div class="result-prescription-box">
-            <div class="box-label coral">✨ Check의 비진단 기록 정리 활용 가이드</div>
+            <div class="box-label coral">✨ 함께 고려해 볼 수 있는 기록 정리 방법</div>
             <p class="prescription-headline" id="result-prescription-title">
-              번거로운 수기 타이핑 대신 AI 기록 요약으로 정리 시간을 아껴보세요!
+              날짜별 건강 달력과 방문 준비 카드로 기록을 한곳에 모아보세요
             </p>
             <p class="prescription-body" id="result-prescription-body">
-              날짜별 건강 캘린더에 메모와 약봉투 기록을 모아두면 진료 전 한 장의 방문 준비 카드로 깔끔하게 정리해 드립니다.
+              약봉투 사진과 증상 메모를 날짜별로 모아두고, 필요한 가족에게만 선택적으로 공유하는 방법도 활용해 볼 수 있어요.
             </p>
+          </div>
+
+          <!-- 결과 유형 카드 바로 아래 바이럴 공유 버튼 -->
+          <div class="result-viral-share-wrap">
+            <button type="button" id="btn-viral-share-top" class="btn-viral-share-top">
+              <span>📤 가족·지인에게 이 테스트 공유하기</span>
+            </button>
+            <p class="viral-share-hint">나의 결과 유형과 1분 체크 링크를 카카오톡·스레드·단톡방에 바로 전달해요</p>
           </div>
         </div>
 
@@ -319,6 +440,34 @@
           </div>
         </div>
 
+        <!-- 3-3-B. 선택형 1줄 자유응답(VOC) 입력 영역 (연락처 없이 익명 저장) -->
+        <div class="voc-section" id="voc-section">
+          <div class="voc-card">
+            <div class="section-header-tag">💬 익명 한 줄 의견 (선택사항)</div>
+            <h3 class="voc-question-title">
+              부모님의 건강정보를 챙기면서 기억에 남는 불편한 경험이 있나요? <span class="voc-opt-tag">(선택사항)</span>
+            </h3>
+            <p class="voc-guide-text">
+              있다면 짧게 들려주세요. <strong>병명, 실명, 상세 처방 내용 등 민감한 개인정보는 적지 말아주세요.</strong>
+            </p>
+            <div class="voc-input-group">
+              <input
+                type="text"
+                id="input-voc-comment"
+                class="form-input voc-input"
+                maxlength="200"
+                placeholder="예: 여러 병원 약봉투를 사진첩에서 다시 찾기가 번거로웠어요 (익명 저장)"
+              />
+              <button type="button" id="btn-submit-voc" class="btn-voc-save">
+                익명으로 의견 남기기
+              </button>
+            </div>
+            <p id="voc-saved-msg" class="voc-saved-msg hidden">
+              ✓ 소중한 한 줄 의견이 익명 설문 응답 데이터에 안전하게 저장되었습니다.
+            </p>
+          </div>
+        </div>
+
         <!-- 3-4. 초기 테스트 참여자 모집 폼 (비진단·민감정보 비수집·보유기간·삭제 요청 안내 명시) -->
         <div class="lead-form-section" id="lead-form-section">
           <div class="lead-card">
@@ -366,7 +515,7 @@
                   required
                 />
                 <p class="form-helper-text">
-                  * 설문 응답 통계 데이터(`responses.json`)와 물리적으로 완전히 분리되어 안전하게 별도 보관됩니다.
+                  * 익명 설문 통계 데이터와 완전히 분리되어 안전하게 별도 보관됩니다.
                 </p>
               </div>
 
@@ -470,6 +619,7 @@
   <!-- 토스트 알림 -->
   <div id="toast-message" class="toast hidden">링크가 복사되었습니다! 카카오톡에 붙여넣어 공유해 보세요.</div>
 
+  <script src="/js/api-client.js"></script>
   <script src="/js/app.js"></script>
 </body>
 </html>

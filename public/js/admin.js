@@ -49,18 +49,25 @@
   let currentFilter = 'all'; // 'all' | 'real' | 'seed'
 
   const SHORT_LABELS = {
-    auth_full_consent: '부모님 사전 동의 후 모든 기록 공유',
-    auth_selective: '민감 기록 가리고 필요한 항목만 선택 공유',
-    auth_card_only: '평소 비공개 + 병원 방문 준비 카드만 공유',
-    auth_unsure: '잘 모르겠음',
-    feat_health_calendar: '날짜별 건강 캘린더·증상 사진첩 정리',
-    feat_med_summary: '처방전·복용약 요약 정리',
-    feat_visit_card: '병원 방문 준비 카드 생성',
-    feat_privacy_control: '가족 구성원별 세밀한 공유 범위 설정',
-    biz_ad_free: '짧은 광고 시청 후 무료 이용',
-    biz_pay_per_use: '건당 소액 결제 (500~1,000원)',
-    biz_subscription: '온 가족 월 정기 구독 (3,900~4,900원)',
-    biz_free_basic: '무료 기본 기록 기능만 이용'
+    share_group_chat: '가족 전체 단톡방에서 공유해요',
+    share_selected_family: '필요한 가족만 선택해 따로 소통해요',
+    share_visit_summary: '병원 방문 전후로 필요한 기록만 공유해요',
+    share_parent_consent: '부모님 사전 동의 후 허용된 항목만 공유해요',
+    share_none_exp: '공유한 경험이 없어요',
+    feat_calendar: '날짜별 건강 달력',
+    feat_med_list: '복용약·처방전 정리',
+    feat_visit_card: '병원 방문 준비 카드',
+    feat_selective_share: '가족별 선택적 공유·소통',
+    feat_current_enough: '지금 방식으로 충분해요',
+    freq_5_plus: '5번 이상 있었어요',
+    freq_3_4: '3~4번 있었어요',
+    freq_1_2: '1~2번 있었어요',
+    freq_zero: '한 번도 없었어요',
+    freq_no_help: '최근 6개월 동안 도운 적 없음',
+    age_20s: '20대',
+    age_30s: '30대',
+    age_40s: '40대',
+    age_50_plus: '50대 이상'
   };
 
   if (currentPassword) {
@@ -164,7 +171,7 @@
     kpiConversionRate.textContent = `${kpi.conversionRate}%`;
     kpiInterviewCount.textContent = `${kpi.interviewAvailableCount}명`;
     kpiConsentRate.textContent = `${kpi.consentAwareRate}%`;
-    kpiConsentSub.textContent = `동의·권한 설정 중시 ${kpi.consentAwareCount}명 / 전체 ${kpi.totalResponses}명`;
+    kpiConsentSub.textContent = `재확인 경험 ${kpi.consentAwareCount}명 / 전체 ${kpi.totalResponses}명`;
 
     // 2. 4가지 건강기록 관리 습관 유형 분포 렌더링
     typeStatsContainer.innerHTML = '';
@@ -266,7 +273,7 @@
         delBtn.addEventListener('click', async () => {
           const leadId = delBtn.getAttribute('data-lead-id');
           if (!leadId) return;
-          if (!confirm('선택하신 신청자의 연락처 및 개인정보를 leads.json에서 즉시 영구 삭제하시겠습니까?')) {
+          if (!confirm('선택하신 신청자의 연락처 및 개인정보를 시스템에서 즉시 영구 삭제하시겠습니까?')) {
             return;
           }
           await deleteLeadById(leadId);
@@ -281,7 +288,7 @@
     if (responses.length === 0) {
       responsesTableBody.innerHTML = `
         <tr>
-          <td colspan="7" style="text-align:center; padding: 28px; color: #64748B;">
+          <td colspan="8" style="text-align:center; padding: 28px; color: #64748B;">
             해당 필터 조건에 맞는 설문 응답 내역이 없습니다.
           </td>
         </tr>
@@ -296,15 +303,20 @@
         const q4Label = SHORT_LABELS[resp.answers?.Q4] || resp.answers?.Q4 || '-';
         const q5Label = SHORT_LABELS[resp.answers?.Q5] || resp.answers?.Q5 || '-';
         const q6Label = SHORT_LABELS[resp.answers?.Q6] || resp.answers?.Q6 || '-';
+        const q7Label = SHORT_LABELS[resp.answers?.Q7] || resp.answers?.Q7 || '-';
+        const vocText = resp.vocComment && resp.vocComment.trim()
+          ? `<span style="color:#0F766E; font-weight:600;">“${escapeHtml(resp.vocComment)}”</span>`
+          : '<span style="color:#94A3B8;">-</span>';
 
         tr.innerHTML = `
           <td>${seedBadge}</td>
           <td>${formatDateTime(resp.createdAt)}</td>
+          <td><strong>${escapeHtml(q7Label)}</strong></td>
           <td><strong>${escapeHtml(resp.habitTypeName)}</strong></td>
-          <td>${resp.totalScore} / 16점</td>
           <td>${escapeHtml(q4Label)}</td>
           <td>${escapeHtml(q5Label)}</td>
           <td>${escapeHtml(q6Label)}</td>
+          <td>${vocText}</td>
         `;
         responsesTableBody.appendChild(tr);
       });
@@ -349,7 +361,7 @@
 
   // 시연용 샘플 데이터 초기화
   btnResetSeed.addEventListener('click', async () => {
-    if (!confirm('데이터베이스(responses.json 및 leads.json)를 시연용 초기 샘플 데이터(설문 5건, 신청 3건)로 초기화하시겠습니까?')) {
+    if (!confirm('실제 고객 응답은 그대로 유지하고, 시연용 가상 데이터(설문 5건, 신청 3건)만 기본값으로 복원하시겠습니까?')) {
       return;
     }
     try {
@@ -412,4 +424,72 @@
 
   btnExportResponses.addEventListener('click', () => downloadCsv('responses'));
   btnExportLeads.addEventListener('click', () => downloadCsv('leads'));
+
+  // ==================== 바이럴 확산 키트 (템플릿 3종 원클릭 복사 & QR코드 저장) ====================
+  async function copyToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+  }
+
+  document.querySelectorAll('.btn-copy-template[data-target]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const targetId = btn.getAttribute('data-target');
+      const textarea = document.getElementById(targetId);
+      if (!textarea) return;
+      const originalLabel = btn.textContent;
+      try {
+        await copyToClipboard(textarea.value);
+        btn.textContent = '✓ 홍보 문구가 복사되었습니다! 바로 붙여넣기 하세요';
+        setTimeout(() => {
+          btn.textContent = originalLabel;
+        }, 2500);
+      } catch (e) {
+        alert('클립보드 복사에 실패했습니다. 텍스트를 직접 선택해 복사해 주세요.');
+      }
+    });
+  });
+
+  const btnCopySurveyUrl = document.getElementById('btn-copy-survey-url');
+  if (btnCopySurveyUrl) {
+    btnCopySurveyUrl.addEventListener('click', async () => {
+      const urlText = 'https://check-research.surge.sh';
+      const orig = btnCopySurveyUrl.textContent;
+      try {
+        await copyToClipboard(urlText);
+        btnCopySurveyUrl.textContent = '✓ 링크 복사 완료!';
+        setTimeout(() => {
+          btnCopySurveyUrl.textContent = orig;
+        }, 2000);
+      } catch (e) {}
+    });
+  }
+
+  const btnDownloadQr = document.getElementById('btn-download-qr');
+  const adminQrImg = document.getElementById('admin-qr-img');
+  if (btnDownloadQr && adminQrImg) {
+    btnDownloadQr.addEventListener('click', async () => {
+      try {
+        const res = await fetch(adminQrImg.src);
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = 'check_research_qr.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+      } catch (e) {
+        window.open(adminQrImg.src, '_blank');
+      }
+    });
+  }
 })();

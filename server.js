@@ -14,10 +14,21 @@ const LEADS_FILE = path.join(DATA_DIR, 'leads.json');
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// CORS 허용 (외부 고정 도메인 check-research.surge.sh 연동 지원)
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-admin-password');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  next();
+});
+
 // 정적 파일 서빙
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 시연용 초기 시드 데이터 (설문 응답 통계 - 개인 식별 정보 일절 없음)
+// 시연용 초기 시드 데이터 (설문 응답 통계 - 개인 식별 정보 일절 없음 + 익명 1줄 VOC 포함)
 function getSeedResponses() {
   return [
     {
@@ -25,85 +36,90 @@ function getSeedResponses() {
       createdAt: '2026-10-19T14:22:10.000Z',
       isSeed: true,
       answers: {
-        Q1: 'pain_recall',
-        Q2: 'share_kakao',
-        Q3: 'organize_scattered',
-        Q4: 'auth_selective',
+        Q1: 'exp_hard_answer',
+        Q2: 'store_kakao',
+        Q3: 'recheck_search',
+        Q4: 'share_selected_family',
         Q5: 'feat_visit_card',
-        Q6: 'biz_pay_per_use'
+        Q6: 'freq_5_plus',
+        Q7: 'age_30s'
       },
-      totalScore: 8,
       habitType: 'type2',
-      habitTypeName: '사진첩·단톡방 스크롤 탐정형'
+      habitTypeName: '사진첩·단톡방 스크롤 탐정형',
+      vocComment: '가족 단톡방에서 예전에 올린 약봉투 사진을 다시 찾으려니 대화에 밀려서 한참 걸렸어요.'
     },
     {
       id: 'resp-seed-102',
       createdAt: '2026-10-19T19:45:32.000Z',
       isSeed: true,
       answers: {
-        Q1: 'pain_scattered',
-        Q2: 'share_calendar_memo',
-        Q3: 'organize_complex',
-        Q4: 'auth_selective',
-        Q5: 'feat_med_summary',
-        Q6: 'biz_subscription'
+        Q1: 'exp_multi_meds',
+        Q2: 'store_memo',
+        Q3: 'recheck_med_list',
+        Q4: 'share_parent_consent',
+        Q5: 'feat_med_list',
+        Q6: 'freq_3_4',
+        Q7: 'age_40s'
       },
-      totalScore: 11,
       habitType: 'type3',
-      habitTypeName: '수첩·메모장 꼼꼼 기록 매니저형'
+      habitTypeName: '수첩·메모장 꼼꼼 기록 매니저형',
+      vocComment: '병원 여러 곳에서 처방받은 약 이름을 메모장에 일일이 받아 적기가 번거로웠습니다.'
     },
     {
       id: 'resp-seed-103',
       createdAt: '2026-10-20T01:12:05.000Z',
       isSeed: true,
       answers: {
-        Q1: 'pain_recall',
-        Q2: 'share_none',
-        Q3: 'organize_scattered',
-        Q4: 'auth_card_only',
-        Q5: 'feat_health_calendar',
-        Q6: 'biz_ad_free'
+        Q1: 'exp_forgot_question',
+        Q2: 'store_none',
+        Q3: 'recheck_symptom_date',
+        Q4: 'share_visit_summary',
+        Q5: 'feat_calendar',
+        Q6: 'freq_3_4',
+        Q7: 'age_40s'
       },
-      totalScore: 6,
       habitType: 'type1',
-      habitTypeName: '마음만은 든든, 기록 정리는 막막한 효심형'
+      habitTypeName: '마음만은 든든, 기억·대화 중심 확인형',
+      vocComment: '진료실에 들어가면 긴장해서 언제부터 증상이 있었는지 바로 말씀드리기 어려웠어요.'
     },
     {
       id: 'resp-seed-104',
       createdAt: '2026-10-20T05:30:18.000Z',
       isSeed: true,
       answers: {
-        Q1: 'pain_question',
-        Q2: 'share_album',
-        Q3: 'organize_complex',
-        Q4: 'auth_full_consent',
-        Q5: 'feat_privacy_control',
-        Q6: 'biz_pay_per_use'
+        Q1: 'exp_multi_meds',
+        Q2: 'store_album',
+        Q3: 'recheck_search',
+        Q4: 'share_selected_family',
+        Q5: 'feat_selective_share',
+        Q6: 'freq_5_plus',
+        Q7: 'age_30s'
       },
-      totalScore: 9,
       habitType: 'type2',
-      habitTypeName: '사진첩·단톡방 스크롤 탐정형'
+      habitTypeName: '사진첩·단톡방 스크롤 탐정형',
+      vocComment: '전체 단톡방에는 올리기 조심스러운 내용이 있어서 실제로 동행하는 형제끼리만 따로 공유하고 싶어요.'
     },
     {
       id: 'resp-seed-105',
       createdAt: '2026-10-20T09:15:44.000Z',
       isSeed: true,
       answers: {
-        Q1: 'no_pain',
-        Q2: 'share_cloud_app',
-        Q3: 'organize_timeline',
-        Q4: 'auth_selective',
+        Q1: 'exp_no_issue',
+        Q2: 'store_app_folder',
+        Q3: 'recheck_easy',
+        Q4: 'share_parent_consent',
         Q5: 'feat_visit_card',
-        Q6: 'biz_subscription'
+        Q6: 'freq_1_2',
+        Q7: 'age_50_plus'
       },
-      totalScore: 15,
       habitType: 'type4',
-      habitTypeName: '체계적인 스마트 동행 기록 프로형'
+      habitTypeName: '체계적인 스마트 동행 기록 프로형',
+      vocComment: ''
     }
   ];
 }
 
-// 시연용 초기 시드 데이터 (초기 테스트 신청자 연락처 - 설문 응답과 분리 보관)
+// 시연용 초기 시드 데이터 (초기 테스트 신청자 연락처 - 설문 응답과 물리적 분리 보관)
 function getSeedLeads() {
   return [
     {
@@ -186,68 +202,81 @@ function writeLeads(list) {
   fs.writeFileSync(LEADS_FILE, JSON.stringify(list, null, 2), 'utf8');
 }
 
-// 6개 문항 및 선택지 메타데이터 (심사위원 의견 100% 반영)
+// 6개 문항 및 선택지 메타데이터 (중립성 및 1라운드 심사 기준 100% 반영)
 const QUESTION_META = {
   Q1: {
-    title: 'Q1. [병원 동행·약 관리 경험] 최근 1년간 부모님의 병원 방문이나 약 관리를 도우면서 어떤 경험이 있으셨나요?',
+    title: 'Q1. [부모님 건강관리 경험] 최근 1년 동안 부모님의 병원 방문이나 약 관리를 도우면서 어떤 경험이 있으셨나요?',
     options: {
-      pain_recall: '1. 진료실에서 이전 복용약이나 증상 시점을 바로 답하기 어려워 당황했다',
-      pain_question: '2. 진료가 끝난 뒤에야 의사 선생님께 여쭤볼 질문이 떠올라 아쉬웠다',
-      pain_scattered: '3. 여러 병원의 처방약·영양제 기록이 흩어져 있어 한눈에 확인하기 불편했다',
-      no_pain: '4. 병원 방문이나 약 관리를 도왔지만 별다른 불편함은 없었다',
-      future_concern: '5. 최근 1년간 직접 도운 경험은 없지만 향후 관리 방법이 고민된다'
+      exp_hard_answer: '1. 진료 중 바로 답하기 어려웠어요 (복용약이나 증상이 시작된 시점을 물어본 경험)',
+      exp_forgot_question: '2. 물어볼 질문을 잊어버렸어요 (진료가 끝난 뒤 질문이 떠오른 경험)',
+      exp_multi_meds: '3. 여러 약을 확인해야 했어요 (서로 다른 병원의 처방약이나 영양제를 확인한 경험)',
+      exp_no_issue: '4. 별다른 불편이 없었어요 (필요한 정보를 확인하고 진료를 마친 경험)',
+      exp_none_yet: '5. 아직 직접 도운 경험이 없어요 (앞으로 부모님 건강관리를 도울 가능성이 있는 경우)'
     }
   },
   Q2: {
-    title: 'Q2. [날짜별 건강 변화 기록·공유] 현재 부모님의 날짜별 건강 변화(이상 증상 메모, 증상이나 약봉투 사진, 병원 일정 등)를 어떻게 기록·보관하고 가족과 공유하시나요?',
+    title: 'Q2. [건강기록 보관 방법] 부모님의 약봉투, 증상 사진, 병원 일정은 평소 어디에 기록하거나 보관하시나요?',
     options: {
-      share_album: '1. 스마트폰 사진첩에 찍어두고 필요할 때마다 스크롤해서 찾는다',
-      share_kakao: '2. 가족 카카오톡 단톡방에 사진이나 메시지로 올린다',
-      share_calendar_memo: '3. 캘린더·메모장 앱이나 수첩에 날짜별로 직접 적어둔다',
-      share_cloud_app: '4. 가족 공유 폴더나 전용 기록 앱으로 체계적으로 모아둔다',
-      share_none: '5. 별도로 기록하지 않고 부모님이나 가족의 기억에 의존한다'
+      store_album: '1. 스마트폰 사진첩 (약봉투나 병원 관련 자료를 사진으로 저장해요)',
+      store_kakao: '2. 가족 카카오톡·문자 (가족과 사진이나 메시지로 주고받아요)',
+      store_memo: '3. 캘린더·메모장·수첩 (날짜와 내용을 직접 적어둬요)',
+      store_app_folder: '4. 전용 기록 앱·폴더 (건강 관련 정보를 한곳에 모아둬요)',
+      store_none: '5. 별도로 기록하지 않아요 (필요할 때 기억하거나 가족에게 확인해요)'
     }
   },
   Q3: {
-    title: 'Q3. [비진단 기록 확인·정리의 어려움] 진료 전 과거 복용약·영양제 정보나 이전 증상 기록을 다시 찾아 확인하면서 어떤 점이 가장 어려우셨나요?',
+    title: 'Q3. [과거 기록 재확인 경험] 부모님의 이전 복용약이나 증상 기록을 다시 확인할 때, 어떤 경험이 있으셨나요?',
     options: {
-      organize_scattered: '1. 약봉투·처방전이나 메모가 여러 곳에 흩어져 있어 다시 찾기가 막막하다',
-      organize_complex: '2. 약 이름이 어렵고 가짓수가 많아 진료 전 한 장으로 모아 정리하기 번거롭다',
-      organize_timeline: '3. 언제 어떤 증상이 있었는지 날짜별로 기억을 되짚어 요약하기 어렵다',
-      organize_well: '4. 평소 날짜별로 잘 정리해 두어 다시 확인하는 데 큰 어려움이 없다'
+      recheck_search: '1. 기록을 다시 찾아야 했어요 (사진, 메시지, 서류 등을 찾아본 경험)',
+      recheck_med_list: '2. 약 이름을 정리해야 했어요 (여러 약의 이름이나 복용 정보를 모아본 경험)',
+      recheck_symptom_date: '3. 증상 발생 시점을 확인해야 했어요 (언제 증상이 있었는지 날짜를 확인한 경험)',
+      recheck_easy: '4. 필요한 기록을 쉽게 확인했어요 (평소 관리하던 기록을 바로 확인한 경험)',
+      recheck_none: '5. 다시 확인할 일이 없었어요 (이전 기록을 찾아본 경험이 없는 경우)'
     }
   },
   Q4: {
-    title: 'Q4. [가족 간 접근권한 및 동의 방식] 가족 간 부모님 건강정보를 공유할 때 가장 중요하게 생각하는 ‘접근권한 및 동의’ 방식은 무엇인가요?',
+    title: 'Q4. [가족 간 건강정보 소통 및 공유 범위] 부모님의 건강정보를 가족과 주고받거나 공유할 때 어떤 방식을 선호하시거나 경험하셨나요?',
     options: {
-      auth_full_consent: '1. 부모님 사전 동의 후 모든 기록 공유',
-      auth_selective: '2. 민감한 기록은 가리고 필요한 항목만 선택적 공유',
-      auth_card_only: '3. 평소엔 비공개였다가 병원 방문 준비 카드만 공유',
-      auth_unsure: '4. 잘 모르겠음'
+      share_group_chat: '1. 가족 전체 단톡방에서 공유해요 (모든 가족 구성원에게 사진이나 메시지를 전달한 경험)',
+      share_selected_family: '2. 필요한 가족만 선택해 따로 소통해요 (원하는 가족만 초대하거나 일부에게만 정보를 전달한 경험)',
+      share_visit_summary: '3. 병원 방문 전후로 필요한 기록만 공유해요 (평소엔 각자 관리하고 진료 시점에만 요약 정보를 전달)',
+      share_parent_consent: '4. 부모님 사전 동의 후 허용된 항목만 공유해요 (민감한 정보는 가리고 동의된 범위만 가족과 공유)',
+      share_none_exp: '5. 공유한 경험이 없어요 (가족과 건강정보를 주고받지 않은 경우)'
     }
   },
   Q5: {
-    title: 'Q5. [비진단 핵심 기능 1순위] 부모님 건강기록을 정리·관리할 때 가장 필요하다고 생각하는 핵심 기능 1순위는 무엇인가요?',
+    title: 'Q5. [가장 필요한 기능 1순위] 부모님의 건강기록을 관리할 때, 가장 도움이 될 것 같은 기능 하나를 골라주세요.',
     options: {
-      feat_health_calendar: '1. 날짜별 건강 캘린더·증상 사진첩 정리',
-      feat_med_summary: '2. 처방전·복용약 요약 정리',
-      feat_visit_card: '3. 병원 방문 준비 카드 생성',
-      feat_privacy_control: '4. 가족 구성원별 세밀한 공유 범위 설정'
+      feat_calendar: '1. 날짜별 건강 달력 (증상 메모, 사진, 병원 일정을 날짜별로 기록)',
+      feat_med_list: '2. 복용약·처방전 정리 (약봉투와 처방전 내용을 목록으로 정리)',
+      feat_visit_card: '3. 병원 방문 준비 카드 (최근 기록과 질문을 한 장으로 정리)',
+      feat_selective_share: '4. 가족별 선택적 공유·소통 (초대한 가족에게만 필요한 기록을 공유하고 소통)',
+      feat_current_enough: '5. 지금 방식으로 충분해요 (별도의 기능이 필요하지 않은 경우)'
     }
   },
   Q6: {
-    title: 'Q6. [AI 기록 정리 이용 방식 선호도] 추가 AI 기록 정리 기능(복약·증상 기록 자동 요약 등)을 이용할 때 선호하시는 방식은 무엇인가요?',
+    title: 'Q6. [실제 문제의 반복 빈도] 최근 6개월 동안 부모님의 건강정보를 다시 찾거나 가족에게 확인해야 했던 일이 얼마나 자주 있었나요?',
     options: {
-      biz_ad_free: '1. 짧은 광고 시청 후 무료로 이용',
-      biz_pay_per_use: '2. 병원 방문 전 필요할 때만 건당 소액 결제 (500~1,000원)',
-      biz_subscription: '3. 온 가족이 함께 쓰는 월 정기 구독 (월 3,900~4,900원)',
-      biz_free_basic: '4. 유료 결제 없이 무료 기본 기록 기능만 이용'
+      freq_5_plus: '1. 5번 이상 있었어요 (병원 방문이나 약 확인 때마다 자주 찾아본 경우)',
+      freq_3_4: '2. 3~4번 있었어요 (분기나 격월 단위로 기록을 다시 확인한 경우)',
+      freq_1_2: '3. 1~2번 있었어요 (가끔 필요할 때 이전 기록을 찾아본 경우)',
+      freq_zero: '4. 한 번도 없었어요 (최근 6개월 내 다시 찾아볼 일이 없었던 경우)',
+      freq_no_help: '5. 최근 6개월 동안 부모님 건강관리를 도운 적이 없어요 (해당 기간 내 관련 경험이 없는 경우)'
+    }
+  },
+  Q7: {
+    title: 'Q7. [응답자 연령대] 테스트 결과 분석을 위해 본인의 연령대를 선택해 주세요.',
+    options: {
+      age_20s: '1. 20대',
+      age_30s: '2. 30대',
+      age_40s: '3. 40대',
+      age_50_plus: '4. 50대 이상'
     }
   }
 };
 
 const HABIT_TYPE_META = {
-  type1: '마음만은 든든, 기록 정리는 막막한 효심형',
+  type1: '마음만은 든든, 기억·대화 중심 확인형',
   type2: '사진첩·단톡방 스크롤 탐정형',
   type3: '수첩·메모장 꼼꼼 기록 매니저형',
   type4: '체계적인 스마트 동행 기록 프로형'
@@ -277,10 +306,9 @@ function filterByMode(items, filterMode) {
 }
 
 // 1. 익명 설문 응답 저장 API (POST /api/responses)
-// ※ 개인 식별 정보는 일절 받지 않으며 data/responses.json에만 저장
 app.post('/api/responses', (req, res) => {
   try {
-    const { answers, totalScore, habitType, habitTypeName } = req.body;
+    const { answers, habitType, habitTypeName, vocComment } = req.body;
     if (!answers || !answers.Q1 || !answers.Q6) {
       return res.status(400).json({ ok: false, message: '필수 설문 응답 항목이 누락되었습니다.' });
     }
@@ -296,11 +324,12 @@ app.post('/api/responses', (req, res) => {
         Q3: String(answers.Q3),
         Q4: String(answers.Q4),
         Q5: String(answers.Q5),
-        Q6: String(answers.Q6)
+        Q6: String(answers.Q6),
+        Q7: answers.Q7 ? String(answers.Q7) : ''
       },
-      totalScore: Number(totalScore) || 0,
-      habitType: habitType || 'type1',
-      habitTypeName: habitTypeName || HABIT_TYPE_META[habitType] || HABIT_TYPE_META.type1
+      habitType: habitType || 'type2',
+      habitTypeName: habitTypeName || HABIT_TYPE_META[habitType] || HABIT_TYPE_META.type2,
+      vocComment: vocComment ? String(vocComment).trim().slice(0, 300) : ''
     };
 
     responses.unshift(newResponse);
@@ -311,14 +340,43 @@ app.post('/api/responses', (req, res) => {
       responseId: newResponse.id
     });
   } catch (err) {
-    // 개인정보 평문 로깅 방지: 에러 요약만 출력
     console.error('[Check Server] 설문 응답 저장 중 오류 발생');
     return res.status(500).json({ ok: false, message: '설문 응답 저장 중 서버 오류가 발생했습니다.' });
   }
 });
 
+// 1-B. 선택형 1줄 자유응답(VOC) 익명 업데이트 API (POST /api/responses/voc)
+app.post('/api/responses/voc', (req, res) => {
+  try {
+    const { responseId, vocComment } = req.body;
+    const cleanVoc = String(vocComment || '').trim().slice(0, 300);
+    if (!cleanVoc) {
+      return res.status(400).json({ ok: false, message: '의견 내용을 입력해 주세요.' });
+    }
+
+    const responses = readResponses();
+    let target = null;
+    if (responseId) {
+      target = responses.find((r) => r.id === responseId);
+    }
+    if (!target) {
+      target = responses.find((r) => !r.isSeed);
+    }
+
+    if (target) {
+      target.vocComment = cleanVoc;
+      writeResponses(responses);
+      return res.json({ ok: true, responseId: target.id });
+    }
+
+    return res.status(404).json({ ok: false, message: '연결할 설문 응답을 찾을 수 없습니다.' });
+  } catch (err) {
+    console.error('[Check Server] 익명 VOC 저장 중 오류 발생');
+    return res.status(500).json({ ok: false, message: '의견 저장 중 서버 오류가 발생했습니다.' });
+  }
+});
+
 // 2. 초기 테스트 & 인터뷰 참여 신청 저장 API (POST /api/leads)
-// ※ 설문 응답과 완전히 분리된 data/leads.json에만 저장하며, 서버 로그에 닉네임·연락처 평문을 절대 출력하지 않음
 app.post('/api/leads', (req, res) => {
   try {
     const { nickname, contact, interviewAvailable, privacyConsent } = req.body;
@@ -352,7 +410,6 @@ app.post('/api/leads', (req, res) => {
       leadId: newLead.id
     });
   } catch (err) {
-    // 개인정보 평문 로깅 절대 금지
     console.error('[Check Server] 리드 신청 저장 중 오류 발생 (개인정보 비출력)');
     return res.status(500).json({ ok: false, message: '신청 처리 중 오류가 발생했습니다.' });
   }
@@ -375,12 +432,12 @@ app.get('/api/admin/stats', requireAdminAuth, (req, res) => {
       : 0;
     const interviewAvailableCount = leads.filter((l) => l.interviewAvailable).length;
 
-    // Q4에서 선택적 공유/방문 카드 공유 등 세밀한 권한·동의 중요 응답 비율 (auth_selective + auth_card_only + auth_full_consent)
-    const consentAwareCount = responses.filter(
-      (r) => r.answers && ['auth_selective', 'auth_card_only', 'auth_full_consent'].includes(r.answers.Q4)
+    // Q6에서 최근 6개월 내 1회 이상 재확인 경험 비율 (freq_5_plus, freq_3_4, freq_1_2)
+    const repeatCheckCount = responses.filter(
+      (r) => r.answers && ['freq_5_plus', 'freq_3_4', 'freq_1_2'].includes(r.answers.Q6)
     ).length;
     const consentAwareRate = totalResponses > 0
-      ? Number(((consentAwareCount / totalResponses) * 100).toFixed(1))
+      ? Number(((repeatCheckCount / totalResponses) * 100).toFixed(1))
       : 0;
 
     // 문항별 통계 집계
@@ -453,7 +510,7 @@ app.get('/api/admin/stats', requireAdminAuth, (req, res) => {
         conversionRate,
         interviewAvailableCount,
         consentAwareRate,
-        consentAwareCount
+        consentAwareCount: repeatCheckCount
       },
       questionStats,
       typeStats,
@@ -492,13 +549,16 @@ app.delete('/api/admin/leads/:id', requireAdminAuth, (req, res) => {
 });
 
 // 5. 관리자 시드 데이터 초기화 API (POST /api/admin/reset-seed)
+// ※ 실제 고객 응답(isSeed: false)은 절대 삭제하지 않고 보존하며, 시연용 가상 데이터(isSeed: true)만 기본값으로 복원
 app.post('/api/admin/reset-seed', requireAdminAuth, (req, res) => {
   try {
-    writeResponses(getSeedResponses());
-    writeLeads(getSeedLeads());
+    const realResponses = readResponses().filter((r) => !r.isSeed);
+    const realLeads = readLeads().filter((l) => !l.isSeed);
+    writeResponses([...realResponses, ...getSeedResponses()]);
+    writeLeads([...realLeads, ...getSeedLeads()]);
     return res.json({
       ok: true,
-      message: '시연용 가상 데이터(설문 응답 5건, 초기 테스트 신청 3건)로 초기화되었습니다.'
+      message: '실제 고객 응답은 그대로 보존하고, 시연용 가상 데이터(설문 5건, 신청 3건)만 기본값으로 복원했습니다.'
     });
   } catch (err) {
     console.error('[Check Server] 시드 초기화 중 오류 발생');
@@ -524,7 +584,6 @@ function formatKST(isoStr) {
 }
 
 // 6. 관리자 CSV 다운로드 API (GET /api/admin/export-csv?type=responses|leads&filter=all|real|seed)
-// ※ 헤더 인증(x-admin-password) 필수로 검증하여 URL 쿼리 파라미터에 비밀번호가 남지 않도록 보안 강화
 app.get('/api/admin/export-csv', requireAdminAuth, (req, res) => {
   try {
     const exportType = req.query.type || 'responses';
@@ -566,15 +625,16 @@ app.get('/api/admin/export-csv', requireAdminAuth, (req, res) => {
         '응답ID',
         '데이터구분(Seed/Real)',
         '참여일시(KST)',
-        '기록준비도_점수(4~16점)',
+        '응답자_연령대(Q7)',
         '습관유형_코드',
         '건강기록_관리_습관유형',
-        'Q1_병원동행_약관리경험',
-        'Q2_날짜별_건강변화_기록공유방식',
-        'Q3_과거기록_확인정리_어려움(비진단)',
-        'Q4_가족간_접근권한_동의방식',
-        'Q5_비진단_핵심기능_1순위',
-        'Q6_AI기록정리_선호이용방식'
+        'Q1_부모님_건강관리경험',
+        'Q2_건강기록_보관방법',
+        'Q3_과거기록_재확인경험',
+        'Q4_가족간_소통_공유범위',
+        'Q5_가장필요한_기능1순위',
+        'Q6_최근6개월_재확인빈도',
+        '선택형_1줄_자유응답(익명VOC)'
       ];
       csvRows.push(headers.map(escapeCsvCell).join(','));
 
@@ -585,12 +645,13 @@ app.get('/api/admin/export-csv', requireAdminAuth, (req, res) => {
         const q4Text = QUESTION_META.Q4.options[resp.answers?.Q4] || resp.answers?.Q4 || '';
         const q5Text = QUESTION_META.Q5.options[resp.answers?.Q5] || resp.answers?.Q5 || '';
         const q6Text = QUESTION_META.Q6.options[resp.answers?.Q6] || resp.answers?.Q6 || '';
+        const q7Text = QUESTION_META.Q7.options[resp.answers?.Q7] || resp.answers?.Q7 || '-';
 
         const row = [
           resp.id,
           resp.isSeed ? '[시연용 Seed]' : '[실제 응답 Real]',
           formatKST(resp.createdAt),
-          resp.totalScore,
+          q7Text,
           resp.habitType,
           resp.habitTypeName,
           q1Text,
@@ -598,13 +659,13 @@ app.get('/api/admin/export-csv', requireAdminAuth, (req, res) => {
           q3Text,
           q4Text,
           q5Text,
-          q6Text
+          q6Text,
+          resp.vocComment || ''
         ];
         csvRows.push(row.map(escapeCsvCell).join(','));
       });
     }
 
-    // UTF-8 BOM (\uFEFF) 추가로 한글 엑셀 깨짐 방지
     const csvContent = '\uFEFF' + csvRows.join('\r\n');
 
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');

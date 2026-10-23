@@ -1,7 +1,8 @@
 /* =========================================================
    Check · 1분 부모님 건강기록 관리 습관 유형 체크 & 수요조사 프론트엔드 로직
-   두원공대 최종 심사 의견 (비진단 기록 정리 집중, 가족별 접근권한·동의 구조 필수,
-   설문 통계와 개인정보 분리 보관) 100% 반영
+   - 1라운드 심사 기준(문제 정의 명확성, 반복 확인 빈도, 가족별 선택적 소통) 및 중립성 100% 반영
+   - 결과 유형 중립적 안내 (의학적 진단이나 실제 건강관리 능력을 평가한 결과 아님 명시)
+   - 연락처 없이도 익명으로 남길 수 있는 선택형 1줄 자유응답(VOC) 저장 지원
    ========================================================= */
 
 (function () {
@@ -10,220 +11,219 @@
     {
       id: 'Q1',
       step: 1,
-      category: '질문 1 · 병원 동행 및 약 관리 경험',
-      scene: '🏥 부모님의 외래 진료에 동행하거나 복약 기록을 챙기던 순간을 떠올려 보세요.',
-      question: '최근 1년간 부모님의 병원 방문이나 약 관리를 도우면서 어떤 경험이 있으셨나요?',
+      category: '질문 1 · 부모님 건강관리 경험',
+      scene: '부모님의 외래 진료에 동행하거나 복약 기록을 챙기던 순간 중 \'가장 기억에 남는 경험\' 하나를 골라주세요.',
+      question: '최근 1년 동안 부모님의 병원 방문이나 약 관리를 도우면서 어떤 경험이 있으셨나요?',
       options: [
         {
-          key: 'pain_recall',
+          key: 'exp_hard_answer',
           emoji: '💦',
-          headline: '진료실에서 이전 복용약이나 증상 시점을 바로 답하기 어려워 당황했다',
-          desc: '갑작스러운 질문에 정확한 약 이름이나 증상 시작일이 바로 떠오르지 않았던 경험',
-          score: 1,
-          weights: { type1: 2 }
+          headline: '진료 중 바로 답하기 어려웠어요',
+          desc: '복용약이나 증상이 시작된 시점을 물어본 경험',
+          weights: { type1: 2, type2: 1 }
         },
         {
-          key: 'pain_question',
+          key: 'exp_forgot_question',
           emoji: '💬',
-          headline: '진료가 끝난 뒤에야 의사 선생님께 여쭤볼 질문이 떠올라 아쉬웠다',
-          desc: '짧은 진료 시간 동안 미리 물어볼 질문을 적어가지 못해 돌아오며 아쉬웠던 경험',
-          score: 2,
+          headline: '물어볼 질문을 잊어버렸어요',
+          desc: '진료가 끝난 뒤 질문이 떠오른 경험',
           weights: { type2: 1, type3: 1 }
         },
         {
-          key: 'pain_scattered',
+          key: 'exp_multi_meds',
           emoji: '💊',
-          headline: '여러 병원의 처방약·영양제 기록이 흩어져 있어 한눈에 확인하기 불편했다',
-          desc: '약봉투와 영양제 기록이 여러 곳에 나뉘어 있어 모아 보기 번거로웠던 경험',
-          score: 2,
-          weights: { type2: 2, type3: 1 }
+          headline: '여러 약을 확인해야 했어요',
+          desc: '서로 다른 병원의 처방약이나 영양제를 확인한 경험',
+          weights: { type2: 2, type3: 2 }
         },
         {
-          key: 'no_pain',
+          key: 'exp_no_issue',
           emoji: '✨',
-          headline: '병원 방문이나 약 관리를 도왔지만 별다른 불편함은 없었다',
-          desc: '평소 복약 기록과 진료 일정을 비교적 체계적으로 정리해 두고 있는 편',
-          score: 4,
+          headline: '별다른 불편이 없었어요',
+          desc: '필요한 정보를 확인하고 진료를 마친 경험',
           weights: { type4: 3 }
         },
         {
-          key: 'future_concern',
+          key: 'exp_none_yet',
           emoji: '🌱',
-          headline: '최근 1년간 직접 도운 경험은 없지만 향후 관리 방법이 고민된다',
-          desc: '앞으로 부모님 병원 동행이나 건강기록 정리를 어떻게 시작할지 고민 중인 상태',
-          score: 1,
-          weights: { type1: 2 }
+          headline: '아직 직접 도운 경험이 없어요',
+          desc: '앞으로 부모님 건강관리를 도울 가능성이 있는 경우',
+          weights: { type1: 3 }
         }
       ]
     },
     {
       id: 'Q2',
       step: 2,
-      category: '질문 2 · 날짜별 건강 변화 기록·보관 및 공유 방식',
-      scene: '📅 이상 증상 메모, 증상이나 약봉투 사진, 다음 병원 예약일 등 날짜별 건강 기록...',
-      question: '현재 부모님의 날짜별 건강 변화(이상 증상 메모, 증상이나 약봉투 사진, 병원 일정 등)를 어떻게 기록·보관하고 가족과 공유하시나요?',
+      category: '질문 2 · 건강기록 보관 방법',
+      scene: '평소 부모님의 건강 관련 자료를 어디에 두고 확인하시는지 가장 가까운 방식을 하나 골라주세요.',
+      question: '부모님의 약봉투, 증상 사진, 병원 일정은 평소 어디에 기록하거나 보관하시나요?',
       options: [
         {
-          key: 'share_album',
+          key: 'store_album',
           emoji: '📱',
-          headline: '스마트폰 사진첩에 찍어두고 필요할 때마다 스크롤해서 찾는다',
-          desc: '약봉투나 예약증을 사진으로 찍어두지만 일상 사진과 섞여 다시 찾기 번거로움',
-          score: 2,
-          weights: { type2: 3 }
+          headline: '스마트폰 사진첩',
+          desc: '약봉투나 병원 관련 자료를 사진으로 저장해요',
+          weights: { type2: 4 }
         },
         {
-          key: 'share_kakao',
+          key: 'store_kakao',
           emoji: '💬',
-          headline: '가족 카카오톡 단톡방에 사진이나 메시지로 올린다',
-          desc: '단톡방에 공유해 두지만 대화 내역이 쌓이면 이전 기록을 찾기 어려움',
-          score: 2,
-          weights: { type2: 3 }
+          headline: '가족 카카오톡·문자',
+          desc: '가족과 사진이나 메시지로 주고받아요',
+          weights: { type2: 4 }
         },
         {
-          key: 'share_calendar_memo',
+          key: 'store_memo',
           emoji: '📓',
-          headline: '캘린더·메모장 앱이나 수첩에 날짜별로 직접 적어둔다',
-          desc: '날짜별로 꼼꼼히 적지만 직접 타이핑하고 가족에게 따로 전달하는 수고가 듦',
-          score: 3,
-          weights: { type3: 3 }
+          headline: '캘린더·메모장·수첩',
+          desc: '날짜와 내용을 직접 적어둬요',
+          weights: { type3: 4 }
         },
         {
-          key: 'share_cloud_app',
-          emoji: '📊',
-          headline: '가족 공유 폴더나 전용 기록 앱으로 체계적으로 모아둔다',
-          desc: '언제든 진료실에서 바로 꺼내 볼 수 있도록 디지털로 깔끔하게 모아 관리함',
-          score: 4,
-          weights: { type4: 3 }
+          key: 'store_app_folder',
+          emoji: '🗂️',
+          headline: '전용 기록 앱·폴더',
+          desc: '건강 관련 정보를 한곳에 모아둬요',
+          weights: { type4: 4 }
         },
         {
-          key: 'share_none',
+          key: 'store_none',
           emoji: '🧠',
-          headline: '별도로 기록하지 않고 부모님이나 가족의 기억에 의존한다',
-          desc: '따로 적어두지 않고 필요할 때마다 부모님께 전화해 여쭤보는 편',
-          score: 1,
-          weights: { type1: 3 }
+          headline: '별도로 기록하지 않아요',
+          desc: '필요할 때 기억하거나 가족에게 확인해요',
+          weights: { type1: 4 }
         }
       ]
     },
     {
       id: 'Q3',
       step: 3,
-      category: '질문 3 · 과거 복용약·증상 기록 확인 및 정리의 어려움',
-      scene: '🗂️ 외래 진료에 들어가기 전, 이전 처방약·영양제 기록과 날짜별 증상 메모를 다시 모을 때...',
-      question: '진료 전 과거 복용약·영양제 정보나 이전 증상 기록을 다시 찾아 확인하면서 어떤 점이 가장 어려우셨나요?',
+      category: '질문 3 · 과거 기록 재확인 경험',
+      scene: '진료 전이나 약 확인 시 이전 기록을 다시 살펴보았던 경험을 떠올려 보세요.',
+      question: '부모님의 이전 복용약이나 증상 기록을 다시 확인할 때, 어떤 경험이 있으셨나요?',
       options: [
         {
-          key: 'organize_scattered',
-          emoji: '🔍',
-          headline: '약봉투·처방전이나 메모가 여러 곳에 흩어져 있어 다시 찾기가 막막하다',
-          desc: '종이 약봉투, 사진첩, 카톡방 등에 흩어진 기록을 한곳에 모으기 어려운 점',
-          score: 1,
-          weights: { type1: 2, type2: 2 }
+          key: 'recheck_search',
+          emoji: '🔎',
+          headline: '기록을 다시 찾아야 했어요',
+          desc: '사진, 메시지, 서류 등을 찾아본 경험',
+          weights: { type2: 2, type1: 1 }
         },
         {
-          key: 'organize_complex',
+          key: 'recheck_med_list',
           emoji: '📝',
-          headline: '약 이름이 어렵고 가짓수가 많아 진료 전 한 장으로 모아 정리하기 번거롭다',
-          desc: '여러 병원 처방약과 영양제 이름을 일일이 수기로 타이핑해 정리하기 힘든 점',
-          score: 2,
+          headline: '약 이름을 정리해야 했어요',
+          desc: '여러 약의 이름이나 복용 정보를 모아본 경험',
           weights: { type3: 2, type2: 1 }
         },
         {
-          key: 'organize_timeline',
+          key: 'recheck_symptom_date',
           emoji: '🗓️',
-          headline: '언제 어떤 증상이 있었는지 날짜별로 기억을 되짚어 요약하기 어렵다',
-          desc: '증상이 시작된 날짜와 빈도를 시간순(타임라인)으로 정리해 설명하기 어려운 점',
-          score: 3,
-          weights: { type3: 2 }
+          headline: '증상 발생 시점을 확인해야 했어요',
+          desc: '언제 증상이 있었는지 날짜를 확인한 경험',
+          weights: { type3: 2, type1: 1 }
         },
         {
-          key: 'organize_well',
+          key: 'recheck_easy',
           emoji: '✅',
-          headline: '평소 날짜별로 잘 정리해 두어 다시 확인하는 데 큰 어려움이 없다',
-          desc: '평소 복약 이력과 증상 메모를 날짜별로 잘 정리해 두고 있는 편',
-          score: 4,
+          headline: '필요한 기록을 쉽게 확인했어요',
+          desc: '평소 관리하던 기록을 바로 확인한 경험',
           weights: { type4: 3 }
+        },
+        {
+          key: 'recheck_none',
+          emoji: '🌱',
+          headline: '다시 확인할 일이 없었어요',
+          desc: '이전 기록을 찾아본 경험이 없는 경우',
+          weights: { type1: 2 }
         }
       ]
     },
     {
       id: 'Q4',
       step: 4,
-      category: '질문 4 · 가족 간 건강정보 접근권한 및 동의 방식',
-      scene: '🔒 부모님의 건강정보는 소중하고 민감한 개인정보이기에 부모님 동의와 공개 범위 설정이 중요합니다.',
-      question: '가족 간 부모님 건강정보를 공유할 때 가장 중요하게 생각하는 ‘접근권한 및 동의’ 방식은 무엇인가요?',
+      category: '질문 4 · 가족 간 건강정보 소통 및 공유 범위',
+      scene: '가족과 부모님의 건강정보를 나누거나 소통할 때의 경험 또는 선호하시는 방식을 골라주세요.',
+      question: '부모님의 건강정보를 가족과 주고받거나 공유할 때 어떤 방식을 선호하시거나 경험하셨나요?',
       options: [
         {
-          key: 'auth_full_consent',
-          emoji: '🤝',
-          headline: '부모님 사전 동의 후 모든 기록 공유',
-          desc: '부모님의 명시적인 사전 동의를 거친 뒤 가족 구성원이 전체 기록을 함께 열람',
-          score: 3,
+          key: 'share_group_chat',
+          emoji: '💬',
+          headline: '가족 전체 단톡방에서 공유해요',
+          desc: '모든 가족 구성원에게 사진이나 메시지를 전달한 경험',
+          weights: { type2: 2 }
+        },
+        {
+          key: 'share_selected_family',
+          emoji: '🔒',
+          headline: '필요한 가족만 선택해 따로 소통해요',
+          desc: '원하는 가족만 초대하거나 일부에게만 정보를 전달한 경험',
           weights: { type3: 1, type4: 1 }
         },
         {
-          key: 'auth_selective',
-          emoji: '🛡️',
-          headline: '민감한 기록은 가리고 필요한 항목만 선택적 공유',
-          desc: '부모님 프라이버시를 위해 민감 기록은 비공개하고 가족별로 필요한 항목만 선택 공유',
-          score: 4,
+          key: 'share_visit_summary',
+          emoji: '📋',
+          headline: '병원 방문 전후로 필요한 기록만 공유해요',
+          desc: '평소엔 각자 관리하고 진료 시점에만 요약 정보를 전달',
+          weights: { type3: 1, type4: 1 }
+        },
+        {
+          key: 'share_parent_consent',
+          emoji: '🤝',
+          headline: '부모님 사전 동의 후 허용된 항목만 공유해요',
+          desc: '민감한 정보는 가리고 동의된 범위만 가족과 공유',
           weights: { type4: 2, type3: 1 }
         },
         {
-          key: 'auth_card_only',
-          emoji: '📋',
-          headline: '평소엔 비공개였다가 병원 방문 준비 카드만 공유',
-          desc: '일상 기록은 비공개로 두고 병원 동행 시 필요한 요약 카드만 한시적으로 공유',
-          score: 3,
-          weights: { type2: 1, type3: 1 }
-        },
-        {
-          key: 'auth_unsure',
-          emoji: '🤔',
-          headline: '잘 모르겠음',
-          desc: '가족 간 건강정보 공유 범위나 동의 방식에 대해 아직 구체적으로 생각해 본 적 없음',
-          score: 1,
-          weights: { type1: 1 }
+          key: 'share_none_exp',
+          emoji: '🌿',
+          headline: '공유한 경험이 없어요',
+          desc: '가족과 건강정보를 주고받지 않은 경우',
+          weights: { type1: 2 }
         }
       ]
     },
     {
       id: 'Q5',
       step: 5,
-      category: '질문 5 · 가장 필요한 비진단 기록 정리 핵심 기능 1순위',
-      scene: '🪄 가족이 입력한 복약·증상 기록을 읽기 쉽게 정리해 주는 비진단 보조 기능들입니다.',
-      question: '부모님 건강기록을 정리·관리할 때 가장 필요하다고 생각하는 핵심 기능 1순위는 무엇인가요?',
+      category: '질문 5 · 가장 필요한 기능 1순위',
+      scene: '부모님의 건강기록을 정리·보관할 때 어떤 기능이 도움이 될지 의견을 들려주세요.',
+      question: '부모님의 건강기록을 관리할 때, 가장 도움이 될 것 같은 기능 하나를 골라주세요.',
       options: [
         {
-          key: 'feat_health_calendar',
+          key: 'feat_calendar',
           emoji: '📅',
-          headline: '날짜별 건강 캘린더·증상 사진첩 정리',
-          desc: '이상 증상 메모, 증상·약봉투 사진, 병원 일정을 날짜별 캘린더에 한눈에 모아 보관',
-          score: 0,
+          headline: '날짜별 건강 달력',
+          desc: '증상 메모, 사진, 병원 일정을 날짜별로 기록',
           weights: {}
         },
         {
-          key: 'feat_med_summary',
+          key: 'feat_med_list',
           emoji: '💊',
-          headline: '처방전·복용약 요약 정리',
-          desc: '여러 병원의 처방전·약봉투 기록을 촬영·입력하면 읽기 쉬운 복약 목록표로 단순 요약',
-          score: 0,
+          headline: '복용약·처방전 정리',
+          desc: '약봉투와 처방전 내용을 목록으로 정리',
           weights: {}
         },
         {
           key: 'feat_visit_card',
-          emoji: '🏥',
-          headline: '병원 방문 준비 카드 생성',
-          desc: '최근 증상 메모, 복용약 기록 요약, 여쭤볼 질문 3가지를 진료 지참용 1장 카드로 정리',
-          score: 0,
+          emoji: '📋',
+          headline: '병원 방문 준비 카드',
+          desc: '최근 기록과 질문을 한 장으로 정리',
           weights: {}
         },
         {
-          key: 'feat_privacy_control',
+          key: 'feat_selective_share',
           emoji: '🔐',
-          headline: '가족 구성원별 세밀한 공유 범위 설정',
-          desc: '부모님 사전 동의 기반, 가족별·항목별 열람 권한 및 공개 범위를 안전하게 설정',
-          score: 0,
+          headline: '가족별 선택적 공유·소통',
+          desc: '초대한 가족에게만 필요한 기록을 공유하고 소통',
+          weights: {}
+        },
+        {
+          key: 'feat_current_enough',
+          emoji: '🌿',
+          headline: '지금 방식으로 충분해요',
+          desc: '별도의 기능이 필요하지 않은 경우',
           weights: {}
         }
       ]
@@ -231,102 +231,144 @@
     {
       id: 'Q6',
       step: 6,
-      category: '질문 6 · 추가 AI 기록 정리 기능 이용 방식 선호도',
-      scene: '💡 기본 건강 캘린더와 수동 기록은 무료로 제공될 때, 추가 AI 기록 자동 요약 기능의 선호 방식을 알려주세요.',
-      question: '추가 AI 기록 정리 기능(복약·증상 기록 자동 요약 등)을 이용할 때 선호하시는 방식은 무엇인가요?',
+      category: '질문 6 · 실제 문제의 반복 빈도 (재사용성 확인)',
+      scene: '최근 반년 동안 부모님의 건강정보나 복약 기록을 다시 확인했던 빈도를 알려주세요.',
+      question: '최근 6개월 동안 부모님의 건강정보를 다시 찾거나 가족에게 확인해야 했던 일이 얼마나 자주 있었나요?',
       options: [
         {
-          key: 'biz_ad_free',
-          emoji: '📺',
-          headline: '짧은 광고 시청 후 무료로 이용',
-          desc: '필요할 때마다 15~30초 광고를 시청하고 무료로 AI 기록 요약 기능을 이용',
-          score: 0,
+          key: 'freq_5_plus',
+          emoji: '🔄',
+          headline: '5번 이상 있었어요',
+          desc: '병원 방문이나 약 확인 때마다 자주 찾아본 경우',
           weights: {}
         },
         {
-          key: 'biz_pay_per_use',
-          emoji: '🪙',
-          headline: '병원 방문 전 필요할 때만 건당 소액 결제 (500~1,000원)',
-          desc: '월 고정 구독료 없이 병원 진료 전 요약 카드가 필요할 때만 소액으로 이용',
-          score: 0,
+          key: 'freq_3_4',
+          emoji: '📅',
+          headline: '3~4번 있었어요',
+          desc: '분기나 격월 단위로 기록을 다시 확인한 경우',
           weights: {}
         },
         {
-          key: 'biz_subscription',
-          emoji: '👨‍👩‍👧',
-          headline: '온 가족이 함께 쓰는 월 정기 구독 (월 3,900~4,900원)',
-          desc: '커피 한 잔 값으로 부모님과 형제자매가 광고 없이 기록 정리 기능을 무제한 이용',
-          score: 0,
+          key: 'freq_1_2',
+          emoji: '🔎',
+          headline: '1~2번 있었어요',
+          desc: '가끔 필요할 때 이전 기록을 찾아본 경우',
           weights: {}
         },
         {
-          key: 'biz_free_basic',
-          emoji: '🆓',
-          headline: '유료 결제 없이 무료 기본 기록 기능만 이용',
-          desc: '유료 결제나 광고 시청 없이 기본 제공되는 수동 기록·보관 기능만 사용',
-          score: 0,
+          key: 'freq_zero',
+          emoji: '✨',
+          headline: '한 번도 없었어요',
+          desc: '최근 6개월 내 다시 찾아볼 일이 없었던 경우',
+          weights: {}
+        },
+        {
+          key: 'freq_no_help',
+          emoji: '🌱',
+          headline: '최근 6개월 동안 부모님 건강관리를 도운 적이 없어요',
+          desc: '해당 기간 내 관련 경험이 없는 경우',
+          weights: {}
+        }
+      ]
+    },
+    {
+      id: 'Q7',
+      step: 7,
+      category: '마지막 확인 · 응답자 연령대 선택',
+      scene: '',
+      question: '테스트 결과 분석을 위해 본인의 연령대를 선택해 주세요.',
+      options: [
+        {
+          key: 'age_20s',
+          emoji: '🌱',
+          headline: '20대',
+          desc: '',
+          weights: {}
+        },
+        {
+          key: 'age_30s',
+          emoji: '🌿',
+          headline: '30대',
+          desc: '',
+          weights: {}
+        },
+        {
+          key: 'age_40s',
+          emoji: '🌳',
+          headline: '40대',
+          desc: '',
+          weights: {}
+        },
+        {
+          key: 'age_50_plus',
+          emoji: '🌺',
+          headline: '50대 이상',
+          desc: '',
           weights: {}
         }
       ]
     }
   ];
 
-  // 2. 4가지 부모님 건강기록 관리 습관 유형 (비진단 습관 분류)
+  // 2. 4가지 부모님 건강기록 관리 습관 유형 (사용자를 평가·단정하지 않는 중립적 설명)
   const HABIT_TYPES = {
     type1: {
       code: 'type1',
-      badge: '습관 유형 1 · 효심기록시작형',
+      badge: '기록 습관 유형 1 · 기억·대화 확인형',
       emoji: '🌷',
-      title: '마음만은 든든, 기록 정리는 막막한 효심형',
-      nickname: '“부모님 건강을 챙기고 싶은 마음은 굴뚝같은데, 기록을 어디서부터 모을지 막막해요!”',
+      title: '마음만은 든든, 기억·대화 중심 확인형',
+      nickname: '“필요할 때 기억을 되짚거나 부모님·가족과 직접 대화하며 확인하는 유형이에요.”',
       description:
-        '부모님 생각만 하면 늘 마음이 쓰이고 더 챙겨드리고 싶은 다정한 자녀분이시군요! 다만 바쁜 일상 속에서 부모님이 어떤 약을 드시는지, 언제 어떤 증상이 있으셨는지 날짜별로 따로 기록해 두기가 쉽지 않으셨을 거예요. 진료실에서 이전 기록이 바로 떠오르지 않아 아쉬웠던 경험도 있으셨을 텐데요, 이제 복잡한 수기 정리 대신 간편한 기록 도구를 시작해 볼 타이밍입니다.',
-      prescriptionTitle: '기억에 의존하는 부담을 덜고 ‘날짜별 건강 캘린더’로 가볍게 기록을 시작해 보세요.',
+        '부모님의 건강정보를 별도의 도구에 적어두기보다, 필요할 때 기억을 떠올리거나 가족에게 물어보며 확인하는 유형이에요. 일상적인 안부 소통과 함께 자연스럽게 챙길 수 있어요. 만약 이전 복용약이나 증상 시점을 다시 확인해야 하는 순간이 생긴다면, 날짜별 건강 달력이나 사진 정리를 가볍게 시작해 보는 방법도 고려해 볼 수 있어요.',
+      prescriptionTitle: '날짜별 건강 달력이나 방문 준비 카드를 필요에 따라 가볍게 활용해 볼 수 있어요.',
       prescriptionBody:
-        '본가에 가셨을 때 약봉투와 이상 증상 시점을 건강 캘린더에 사진과 짧은 메모로 남겨두세요. Check가 흩어진 기록을 읽기 쉽게 모아 드리고, 병원 방문 전에는 부모님 동의 하에 진료에 필요한 항목만 담긴 ‘병원 방문 준비 카드’로 깔끔하게 요약해 드립니다.'
+        '약봉투 사진이나 증상이 있었던 날짜를 달력 형태로 모아두면, 나중에 병원 방문 전 필요한 기록만 한 장의 카드로 확인하는 데 참고할 수 있어요.'
     },
     type2: {
       code: 'type2',
-      badge: '습관 유형 2 · 스크롤탐정형',
+      badge: '기록 습관 유형 2 · 사진첩·대화방 활용형',
       emoji: '🔍',
       title: '사진첩·단톡방 스크롤 탐정형',
-      nickname: '“분명 지난달에 단톡방이나 사진첩에 약봉투 찍어 올렸는데... 어디 갔지?!”',
+      nickname: '“부모님의 건강정보를 사진이나 가족 대화방을 통해 보관하고 확인하는 유형이에요.”',
       description:
-        '부모님 처방전이나 병원 예약증이 생길 때마다 부지런히 사진을 찍고 가족 단톡방에 공유하는 센스 만점 자녀분이시네요! 하지만 막상 병원 진료실 앞에서 과거 기록을 다시 찾으려고 하면, 수많은 일상 사진과 안부 대화 속에 파묻혀 한참 동안 스크롤을 올려야 했던 번거로움이 있으셨을 거예요. 기록하려는 습관은 이미 훌륭하지만, 기록이 여러 곳에 흩어져 있어 정리 피로도가 높은 상태입니다.',
-      prescriptionTitle: '단톡방과 사진첩에 흩어진 기록들, 이제 ‘날짜별 건강 캘린더’ 한곳에 모아보세요.',
+        '부모님의 건강정보를 사진이나 가족 대화방을 통해 보관하고 확인하는 유형이에요. 사진과 메시지를 활용하면 정보를 빠르게 남길 수 있어요. 기록을 다시 찾는 일이 불편했다면 날짜별로 정리하는 방법도 고려해 볼 수 있어요.',
+      prescriptionTitle: '사진과 메시지를 날짜별로 모아보고, 공유 범위를 선택하는 방법도 고려해 보세요.',
       prescriptionBody:
-        '약봉투 사진과 증상 메모를 날짜별로 한눈에 모아 보관할 수 있어요. 특히 가족 전체에게 모든 민감 기록을 무조건 노출하는 단톡방 대신, 부모님 사전 동의 하에 필요한 항목만 선택적으로 공유하는 안전한 접근권한 설정을 활용해 보세요.'
+        '사진첩이나 대화방에 찍어둔 약봉투·증상 기록을 날짜별 달력으로 모아두거나, 필요한 가족에게만 선택적으로 공유하는 방식을 함께 활용해 볼 수 있어요.'
     },
     type3: {
       code: 'type3',
-      badge: '습관 유형 3 · 꼼꼼수첩매니저형',
+      badge: '기록 습관 유형 3 · 캘린더·수첩 기록형',
       emoji: '📓',
       title: '수첩·메모장 꼼꼼 기록 매니저형',
-      nickname: '“부모님 복용약 목록부터 여쭤볼 질문까지 직접 적어두는 든든한 가족 매니저!”',
+      nickname: '“부모님의 약 목록이나 병원 일정을 캘린더·메모장·수첩에 직접 적어두는 유형이에요.”',
       description:
-        '가족 중에서 부모님의 병원 일정과 건강 기록을 가장 주도적으로 챙기는 든든한 매니저 역할을 하고 계시군요! 진료 전 캘린더나 수첩에 증상 시점과 질문을 적어 가는 정성이 정말 놀랍습니다. 다만 어렵고 긴 처방약 이름을 일일이 수기로 타이핑하고, 진료 후 형제자매에게 결과를 다시 요약해 전달하느라 혼자서 너무 많은 정리 수고를 감당하고 계십니다.',
-      prescriptionTitle: '정성스러운 기록 습관에 ‘비진단 AI 요약’과 ‘선택적 공유’를 더해 수고를 덜어보세요!',
+        '부모님의 건강정보를 캘린더나 메모장, 수첩 등에 날짜와 내용으로 직접 기록하며 보관하는 유형이에요. 직접 내용을 적어두면 진료 전후에 필요한 사항을 차분히 확인할 수 있어요. 여러 약 이름이나 이전 기록을 한데 모으는 과정을 조금 더 간편하게 정리하는 방법도 함께 고려해 볼 수 있어요.',
+      prescriptionTitle: '직접 적어두던 복약·증상 메모를 방문 준비 카드 형태로 모아볼 수 있어요.',
       prescriptionBody:
-        '번거로운 약 이름 타이핑 대신 약봉투 기록 요약 기능을 활용하면 진료 지참용 ‘병원 방문 준비 카드’가 1장 표로 깔끔하게 정리됩니다. 부모님 동의에 따라 가족별로 공유 범위를 안전하게 설정해 기록 전달 부담도 줄여보세요.'
+        '날짜별로 기록한 증상 메모와 처방약 목록을 진료 전 한 장의 요약 카드로 정리하고, 부모님 동의에 따라 원하는 가족과 공유하는 방법도 활용해 볼 수 있어요.'
     },
     type4: {
       code: 'type4',
-      badge: '습관 유형 4 · 스마트기록프로형',
+      badge: '기록 습관 유형 4 · 전용 폴더·앱 정리형',
       emoji: '🏆',
       title: '체계적인 스마트 동행 기록 프로형',
-      nickname: '“날짜별 기록 정리부터 가족 간 공유 범위까지 빈틈없이 챙기는 스마트 파트너!”',
+      nickname: '“전용 기록 앱이나 폴더에 건강 관련 정보를 한곳에 모아 관리하는 유형이에요.”',
       description:
-        '부모님의 날짜별 증상 기록과 복용약 목록을 평소에도 체계적으로 정리하고 가족과 현명하게 공유하고 계신 프로 기록러시네요! 진료실에서도 준비된 메모로 핵심 질문을 빠짐없이 여쭤보실 수 있는 든든한 준비성을 갖추고 계십니다. 앞으로 부모님의 진료과가 늘어나거나 가족 간 프라이버시 보호가 더욱 중요해질 때, 전용 건강기록 지갑이 함께한다면 더욱 완벽할 거예요.',
-      prescriptionTitle: '부모님의 프라이버시를 지키는 ‘세밀한 가족 권한 설정’과 ‘방문 준비 카드’를 경험해 보세요.',
+        '부모님의 약봉투, 증상 기록, 병원 일정을 전용 폴더나 기록 도구에 모아두고 확인하는 유형이에요. 평소 정리해 둔 방식을 통해 진료 시 필요한 정보를 비교적 수월하게 확인하고 계세요. 가족 구성원별로 공유 범위를 세밀하게 나누거나 진료 전 요약 카드로 공유하는 방식도 필요에 따라 고려해 볼 수 있어요.',
+      prescriptionTitle: '가족별 선택적 공유 범위 설정과 병원 방문 준비 카드를 함께 활용해 보세요.',
       prescriptionBody:
-        '평소에는 민감한 건강 기록을 비공개로 안전하게 보관하고, 병원 방문 시에만 부모님 사전 동의 하에 ‘병원 방문 준비 카드’를 가족이나 부모님 휴대폰으로 간편하게 공유해 보세요.'
+        '평소 정리해 둔 기록 중 민감한 정보는 가리고, 부모님 사전 동의 하에 필요한 항목만 선택해 가족과 소통하는 방식을 고려해 볼 수 있어요.'
     }
   };
 
   // 상태 관리
   let currentStepIndex = 0; // 0 ~ 5
-  const userAnswers = {};   // { Q1: 'pain_recall', ... }
+  const userAnswers = {};   // { Q1: '...', ... }
   let isTransitioning = false;
+  let currentResponseId = null;
+  let isVocSaved = false;
 
   // DOM 요소 참조
   const viewLanding = document.getElementById('view-landing');
@@ -356,6 +398,11 @@
   const resultPrescriptionTitle = document.getElementById('result-prescription-title');
   const resultPrescriptionBody = document.getElementById('result-prescription-body');
 
+  // 선택형 1줄 자유응답(VOC) DOM
+  const inputVocComment = document.getElementById('input-voc-comment');
+  const btnSubmitVoc = document.getElementById('btn-submit-voc');
+  const vocSavedMsg = document.getElementById('voc-saved-msg');
+
   // 신청 폼 DOM
   const betaLeadForm = document.getElementById('beta-lead-form');
   const inputNickname = document.getElementById('input-nickname');
@@ -372,6 +419,7 @@
   const modalUserName = document.getElementById('modal-user-name');
   const btnModalShare = document.getElementById('btn-modal-share');
   const btnModalClose = document.getElementById('btn-modal-close');
+  const btnViralShareTop = document.getElementById('btn-viral-share-top');
   const btnShareLink = document.getElementById('btn-share-link');
   const btnRestartQuiz = document.getElementById('btn-restart-quiz');
   const toastMessage = document.getElementById('toast-message');
@@ -404,7 +452,13 @@
     progressFill.style.width = `${pct}%`;
 
     quizCategory.textContent = q.category;
-    quizScene.textContent = q.scene;
+    if (q.scene) {
+      quizScene.textContent = q.scene;
+      quizScene.classList.remove('hidden');
+    } else {
+      quizScene.textContent = '';
+      quizScene.classList.add('hidden');
+    }
     quizQuestion.textContent = q.question;
 
     optionsList.innerHTML = '';
@@ -414,11 +468,12 @@
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'option-card' + (prevSelected === opt.key ? ' selected' : '');
+      btn.style.alignItems = opt.desc ? 'flex-start' : 'center';
       btn.innerHTML = `
         <span class="option-emoji">${opt.emoji}</span>
         <span class="option-content">
-          <span class="option-headline">${opt.headline}</span>
-          <span class="option-desc">${opt.desc}</span>
+          <span class="option-headline" style="${opt.desc ? '' : 'margin-bottom:0;'}">${opt.headline}</span>
+          ${opt.desc ? `<span class="option-desc">${opt.desc}</span>` : ''}
         </span>
       `;
       btn.addEventListener('click', () => handleOptionSelect(q.id, opt.key, btn));
@@ -453,46 +508,38 @@
     }, 240);
   }
 
-  // 비진단 건강기록 관리 습관 유형 산출 (Q1~Q4 점수 합산 4~16점)
+  // Q1~Q4의 보관·확인·소통 습관 기준으로 자연스럽게 결과 유형 매칭 (점수 서열화 배제)
   function evaluateHabitType() {
-    let totalScore = 0;
     const weights = { type1: 0, type2: 0, type3: 0, type4: 0 };
 
+    // Q2(주 보관 방식)를 가장 핵심 기준으로 삼고, Q1·Q3·Q4의 경험 패턴을 더해 자연스럽게 매칭
     QUESTIONS.forEach((q) => {
       const ansKey = userAnswers[q.id];
       const chosen = q.options.find((o) => o.key === ansKey);
-      if (!chosen) return;
+      if (!chosen || !chosen.weights) return;
 
-      if (['Q1', 'Q2', 'Q3', 'Q4'].includes(q.id)) {
-        totalScore += chosen.score || 0;
-        if (chosen.weights) {
-          Object.keys(chosen.weights).forEach((tKey) => {
-            weights[tKey] += chosen.weights[tKey];
-          });
-        }
+      Object.keys(chosen.weights).forEach((tKey) => {
+        weights[tKey] += chosen.weights[tKey];
+      });
+    });
+
+    // 가장 가중치가 높은 유형 선택 (동점 시 Q2 보관 방식 우선 반영)
+    let finalType = 'type2';
+    const q2Ans = userAnswers.Q2;
+    if (q2Ans === 'store_none') finalType = 'type1';
+    else if (q2Ans === 'store_album' || q2Ans === 'store_kakao') finalType = 'type2';
+    else if (q2Ans === 'store_memo') finalType = 'type3';
+    else if (q2Ans === 'store_app_folder') finalType = 'type4';
+
+    let maxWeight = weights[finalType];
+    ['type1', 'type2', 'type3', 'type4'].forEach((tKey) => {
+      if (weights[tKey] > maxWeight) {
+        maxWeight = weights[tKey];
+        finalType = tKey;
       }
     });
 
-    let baseType = 'type1';
-    if (totalScore >= 14) {
-      baseType = 'type4';
-    } else if (totalScore >= 10) {
-      baseType = 'type3';
-    } else if (totalScore >= 7) {
-      baseType = 'type2';
-    } else {
-      baseType = 'type1';
-    }
-
-    let finalType = baseType;
-    if (totalScore === 6 && weights.type2 > weights.type1 + 1) finalType = 'type2';
-    if (totalScore === 7 && weights.type1 > weights.type2 + 1) finalType = 'type1';
-    if (totalScore === 9 && weights.type3 > weights.type2 + 1) finalType = 'type3';
-    if (totalScore === 10 && weights.type2 > weights.type3 + 1) finalType = 'type2';
-    if (totalScore === 13 && weights.type4 > weights.type3 + 1) finalType = 'type4';
-
     return {
-      totalScore,
       habitType: finalType,
       typeData: HABIT_TYPES[finalType]
     };
@@ -504,7 +551,9 @@
     const tData = evalData.typeData;
 
     resultTypeBadge.textContent = tData.badge;
-    resultScoreBadge.textContent = `기록 준비도 ${evalData.totalScore} / 16점`;
+    if (resultScoreBadge) {
+      resultScoreBadge.textContent = '설문 응답 기반 습관 안내';
+    }
     resultEmoji.textContent = tData.emoji;
     resultTitle.textContent = tData.title;
     resultNickname.textContent = tData.nickname;
@@ -512,23 +561,90 @@
     resultPrescriptionTitle.textContent = tData.prescriptionTitle;
     resultPrescriptionBody.textContent = tData.prescriptionBody;
 
+    // VOC 초기화
+    currentResponseId = null;
+    isVocSaved = false;
+    if (inputVocComment) inputVocComment.value = '';
+    if (vocSavedMsg) vocSavedMsg.classList.add('hidden');
+    if (btnSubmitVoc) {
+      btnSubmitVoc.disabled = false;
+      btnSubmitVoc.textContent = '익명으로 의견 남기기';
+    }
+
     switchView(viewResult);
 
     // 익명 설문 응답 데이터만 data/responses.json에 저장 (개인 식별 정보 일절 없음)
     try {
-      await fetch('/api/responses', {
+      const res = await fetch('/api/responses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           answers: userAnswers,
-          totalScore: evalData.totalScore,
           habitType: evalData.habitType,
-          habitTypeName: tData.title
+          habitTypeName: tData.title,
+          vocComment: ''
         })
       });
+      const json = await res.json();
+      if (json && json.responseId) {
+        currentResponseId = json.responseId;
+      }
     } catch (err) {
       console.error('익명 설문 응답 저장 실패');
     }
+  }
+
+  // 선택형 1줄 자유응답(VOC) 익명 저장 함수
+  async function saveVocComment(silent = false) {
+    if (!inputVocComment) return;
+    const vocText = inputVocComment.value.trim();
+    if (!vocText) {
+      if (!silent) {
+        showToast('남기실 한 줄 의견을 입력해 주세요.');
+        inputVocComment.focus();
+      }
+      return;
+    }
+
+    if (btnSubmitVoc && !silent) {
+      btnSubmitVoc.disabled = true;
+      btnSubmitVoc.textContent = '저장 중...';
+    }
+
+    try {
+      const res = await fetch('/api/responses/voc', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          responseId: currentResponseId,
+          vocComment: vocText
+        })
+      });
+      const json = await res.json();
+      if (res.ok && json.ok) {
+        isVocSaved = true;
+        if (vocSavedMsg) vocSavedMsg.classList.remove('hidden');
+        if (btnSubmitVoc) {
+          btnSubmitVoc.disabled = true;
+          btnSubmitVoc.textContent = '✓ 익명 의견 저장 완료';
+        }
+        if (!silent) {
+          showToast('소중한 한 줄 의견이 익명으로 저장되었습니다!');
+        }
+      } else if (!silent && btnSubmitVoc) {
+        btnSubmitVoc.disabled = false;
+        btnSubmitVoc.textContent = '익명으로 의견 남기기';
+      }
+    } catch (e) {
+      if (!silent && btnSubmitVoc) {
+        btnSubmitVoc.disabled = false;
+        btnSubmitVoc.textContent = '익명으로 의견 남기기';
+      }
+    }
+  }
+
+  if (btnSubmitVoc) {
+    btnSubmitVoc.addEventListener('click', () => saveVocComment(false));
   }
 
   btnStartQuiz.addEventListener('click', () => {
@@ -578,6 +694,11 @@
       return;
     }
 
+    // 만약 위쪽 VOC 칸에 내용을 적어두고 아직 저장 버튼을 안 눌렀다면 함께 익명 응답에 저장
+    if (!isVocSaved && inputVocComment && inputVocComment.value.trim()) {
+      await saveVocComment(true);
+    }
+
     btnSubmitLead.disabled = true;
     btnSubmitLead.innerHTML = '<span>신청 정보를 안전하게 전송 중이에요...</span>';
 
@@ -616,32 +737,66 @@
     modalThankyou.classList.add('hidden');
   });
 
-  async function copyShareLink() {
-    const shareUrl = window.location.origin;
-    try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(shareUrl);
-      } else {
-        const tempInput = document.createElement('input');
-        tempInput.value = shareUrl;
-        document.body.appendChild(tempInput);
-        tempInput.select();
-        document.execCommand('copy');
-        document.body.removeChild(tempInput);
-      }
-      showToast('링크가 복사되었습니다! 가족 단톡방에 공유해 보세요 💚');
-    } catch (err) {
-      showToast('링크가 복사되었습니다: ' + shareUrl);
+  async function copyTextToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const tempInput = document.createElement('textarea');
+      tempInput.value = text;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempInput);
     }
   }
 
-  btnShareLink.addEventListener('click', copyShareLink);
-  btnModalShare.addEventListener('click', copyShareLink);
+  async function handleViralShare() {
+    const shareUrl = window.location.origin;
+    const currentTypeTitle = (resultTitle && resultTitle.textContent)
+      ? resultTitle.textContent.trim()
+      : '사진첩·단톡방 스크롤 탐정형';
+    const fullShareText = `나의 부모님 건강기록 관리 유형은 [${currentTypeTitle}]! 우리 가족도 1분 만에 확인해 보세요 👉 ${shareUrl}`;
+
+    // 모바일 환경 등에서 Web Share API 지원 시 네이티브 공유 시트 호출
+    const isMobileDevice = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '');
+    if (isMobileDevice && navigator.share) {
+      try {
+        await navigator.share({
+          title: '우리 가족의 부모님 건강기록 관리 유형은? (1분 체크)',
+          text: `나의 부모님 건강기록 관리 유형은 [${currentTypeTitle}]! 우리 가족도 1분 만에 확인해 보세요 👉`,
+          url: shareUrl
+        });
+        return;
+      } catch (err) {
+        if (err && err.name === 'AbortError') {
+          return;
+        }
+        // 공유 시트 실패 시 클립보드 복사로 자동 전환
+      }
+    }
+
+    try {
+      await copyTextToClipboard(fullShareText);
+      showToast('공유 문구와 링크가 복사되었습니다!');
+    } catch (err) {
+      showToast('공유 문구와 링크가 복사되었습니다!');
+    }
+  }
+
+  if (btnViralShareTop) {
+    btnViralShareTop.addEventListener('click', handleViralShare);
+  }
+  btnShareLink.addEventListener('click', handleViralShare);
+  btnModalShare.addEventListener('click', handleViralShare);
 
   btnRestartQuiz.addEventListener('click', () => {
     Object.keys(userAnswers).forEach((k) => delete userAnswers[k]);
     currentStepIndex = 0;
+    currentResponseId = null;
+    isVocSaved = false;
     betaLeadForm.reset();
+    if (inputVocComment) inputVocComment.value = '';
+    if (vocSavedMsg) vocSavedMsg.classList.add('hidden');
     btnSubmitLead.disabled = false;
     btnSubmitLead.innerHTML = '<span>시제품 초기 테스트 & 인터뷰 참여 신청하기</span>';
     switchView(viewLanding);

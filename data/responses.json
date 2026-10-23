@@ -1,98 +1,135 @@
 [
   {
+    "id": "resp-1792730220134-420b",
+    "createdAt": "2026-10-23T04:37:00.143Z",
+    "isSeed": false,
+    "answers": {
+      "Q1": "exp_no_issue",
+      "Q2": "store_memo",
+      "Q3": "recheck_med_list",
+      "Q4": "share_visit_summary",
+      "Q5": "feat_current_enough",
+      "Q6": "freq_no_help"
+    },
+    "habitType": "type3",
+    "habitTypeName": "수첩·메모장 꼼꼼 기록 매니저형",
+    "vocComment": ""
+  },
+  {
+    "id": "resp-1792729866329-255d",
+    "createdAt": "2026-10-23T04:31:06.343Z",
+    "isSeed": false,
+    "answers": {
+      "Q1": "exp_hard_answer",
+      "Q2": "store_memo",
+      "Q3": "recheck_symptom_date",
+      "Q4": "share_visit_summary",
+      "Q5": "feat_selective_share",
+      "Q6": "freq_zero"
+    },
+    "habitType": "type3",
+    "habitTypeName": "수첩·메모장 꼼꼼 기록 매니저형",
+    "vocComment": ""
+  },
+  {
     "id": "resp-1792499706693-21da",
     "createdAt": "2026-10-20T12:35:06.693Z",
     "isSeed": false,
     "answers": {
-      "Q1": "future_concern",
-      "Q2": "share_none",
-      "Q3": "organize_scattered",
-      "Q4": "auth_unsure",
-      "Q5": "feat_med_summary",
-      "Q6": "biz_ad_free"
+      "Q1": "exp_none_yet",
+      "Q2": "store_none",
+      "Q3": "recheck_search",
+      "Q4": "share_none_exp",
+      "Q5": "feat_med_list",
+      "Q6": "freq_1_2"
     },
-    "totalScore": 4,
     "habitType": "type1",
-    "habitTypeName": "마음만은 든든, 기록 정리는 막막한 효심형"
+    "habitTypeName": "마음만은 든든, 기억·대화 중심 확인형",
+    "vocComment": ""
   },
   {
     "id": "resp-seed-101",
     "createdAt": "2026-10-19T14:22:10.000Z",
     "isSeed": true,
     "answers": {
-      "Q1": "pain_recall",
-      "Q2": "share_kakao",
-      "Q3": "organize_scattered",
-      "Q4": "auth_selective",
+      "Q1": "exp_hard_answer",
+      "Q2": "store_kakao",
+      "Q3": "recheck_search",
+      "Q4": "share_selected_family",
       "Q5": "feat_visit_card",
-      "Q6": "biz_pay_per_use"
+      "Q6": "freq_5_plus",
+      "Q7": "age_30s"
     },
-    "totalScore": 8,
     "habitType": "type2",
-    "habitTypeName": "사진첩·단톡방 스크롤 탐정형"
+    "habitTypeName": "사진첩·단톡방 스크롤 탐정형",
+    "vocComment": "가족 단톡방에서 예전에 올린 약봉투 사진을 다시 찾으려니 대화에 밀려서 한참 걸렸어요."
   },
   {
     "id": "resp-seed-102",
     "createdAt": "2026-10-19T19:45:32.000Z",
     "isSeed": true,
     "answers": {
-      "Q1": "pain_scattered",
-      "Q2": "share_calendar_memo",
-      "Q3": "organize_complex",
-      "Q4": "auth_selective",
-      "Q5": "feat_med_summary",
-      "Q6": "biz_subscription"
+      "Q1": "exp_multi_meds",
+      "Q2": "store_memo",
+      "Q3": "recheck_med_list",
+      "Q4": "share_parent_consent",
+      "Q5": "feat_med_list",
+      "Q6": "freq_3_4",
+      "Q7": "age_40s"
     },
-    "totalScore": 11,
     "habitType": "type3",
-    "habitTypeName": "수첩·메모장 꼼꼼 기록 매니저형"
+    "habitTypeName": "수첩·메모장 꼼꼼 기록 매니저형",
+    "vocComment": "병원 여러 곳에서 처방받은 약 이름을 메모장에 일일이 받아 적기가 번거로웠습니다."
   },
   {
     "id": "resp-seed-103",
     "createdAt": "2026-10-20T01:12:05.000Z",
     "isSeed": true,
     "answers": {
-      "Q1": "pain_recall",
-      "Q2": "share_none",
-      "Q3": "organize_scattered",
-      "Q4": "auth_card_only",
-      "Q5": "feat_health_calendar",
-      "Q6": "biz_ad_free"
+      "Q1": "exp_forgot_question",
+      "Q2": "store_none",
+      "Q3": "recheck_symptom_date",
+      "Q4": "share_visit_summary",
+      "Q5": "feat_calendar",
+      "Q6": "freq_3_4",
+      "Q7": "age_40s"
     },
-    "totalScore": 6,
     "habitType": "type1",
-    "habitTypeName": "마음만은 든든, 기록 정리는 막막한 효심형"
+    "habitTypeName": "마음만은 든든, 기억·대화 중심 확인형",
+    "vocComment": "진료실에 들어가면 긴장해서 언제부터 증상이 있었는지 바로 말씀드리기 어려웠어요."
   },
   {
     "id": "resp-seed-104",
     "createdAt": "2026-10-20T05:30:18.000Z",
     "isSeed": true,
     "answers": {
-      "Q1": "pain_question",
-      "Q2": "share_album",
-      "Q3": "organize_complex",
-      "Q4": "auth_full_consent",
-      "Q5": "feat_privacy_control",
-      "Q6": "biz_pay_per_use"
+      "Q1": "exp_multi_meds",
+      "Q2": "store_album",
+      "Q3": "recheck_search",
+      "Q4": "share_selected_family",
+      "Q5": "feat_selective_share",
+      "Q6": "freq_5_plus",
+      "Q7": "age_30s"
     },
-    "totalScore": 9,
     "habitType": "type2",
-    "habitTypeName": "사진첩·단톡방 스크롤 탐정형"
+    "habitTypeName": "사진첩·단톡방 스크롤 탐정형",
+    "vocComment": "전체 단톡방에는 올리기 조심스러운 내용이 있어서 실제로 동행하는 형제끼리만 따로 공유하고 싶어요."
   },
   {
     "id": "resp-seed-105",
     "createdAt": "2026-10-20T09:15:44.000Z",
     "isSeed": true,
     "answers": {
-      "Q1": "no_pain",
-      "Q2": "share_cloud_app",
-      "Q3": "organize_timeline",
-      "Q4": "auth_selective",
+      "Q1": "exp_no_issue",
+      "Q2": "store_app_folder",
+      "Q3": "recheck_easy",
+      "Q4": "share_parent_consent",
       "Q5": "feat_visit_card",
-      "Q6": "biz_subscription"
+      "Q6": "freq_1_2",
+      "Q7": "age_50_plus"
     },
-    "totalScore": 15,
     "habitType": "type4",
-    "habitTypeName": "체계적인 스마트 동행 기록 프로형"
+    "habitTypeName": "체계적인 스마트 동행 기록 프로형",
+    "vocComment": ""
   }
 ]

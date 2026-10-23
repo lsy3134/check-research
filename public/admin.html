@@ -560,6 +560,149 @@
       background: #DC2626;
       color: #FFFFFF;
     }
+
+    /* ==================== 바이럴 확산 키트 & QR코드 ==================== */
+    .viral-kit-layout {
+      display: grid;
+      grid-template-columns: 1fr 290px;
+      gap: 20px;
+      align-items: stretch;
+    }
+
+    @media (max-width: 900px) {
+      .viral-kit-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .templates-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+    }
+
+    .template-card {
+      background: #F8FAFC;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .template-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .template-tag {
+      font-size: 0.78rem;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 99px;
+      background: var(--teal-50);
+      color: var(--teal-700);
+    }
+
+    .template-tag.coral {
+      background: var(--coral-50);
+      color: var(--coral-600);
+    }
+
+    .template-textarea {
+      width: 100%;
+      min-height: 155px;
+      border: 1px solid #CBD5E1;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 0.8rem;
+      font-family: inherit;
+      color: var(--text-main);
+      background: #FFFFFF;
+      line-height: 1.5;
+      resize: vertical;
+    }
+
+    .btn-copy-template {
+      width: 100%;
+      background: var(--teal-600);
+      color: #FFFFFF;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 0.83rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-copy-template:hover {
+      background: var(--teal-700);
+    }
+
+    .qr-box {
+      background: #F0FDFA;
+      border: 1.5px solid var(--teal-500);
+      border-radius: 16px;
+      padding: 18px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      text-align: center;
+      gap: 10px;
+    }
+
+    .qr-box h3 {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--teal-700);
+    }
+
+    .qr-box p {
+      font-size: 0.78rem;
+      color: var(--text-sub);
+      line-height: 1.4;
+    }
+
+    .qr-img-frame {
+      background: #FFFFFF;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid #CCFBF1;
+      box-shadow: 0 4px 12px rgba(13, 148, 136, 0.08);
+    }
+
+    .qr-img-frame img {
+      width: 168px;
+      height: 168px;
+      display: block;
+    }
+
+    .qr-url-badge {
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: var(--teal-700);
+      background: #FFFFFF;
+      padding: 5px 10px;
+      border-radius: 8px;
+      border: 1px solid #99F6E4;
+      word-break: break-all;
+      width: 100%;
+    }
+
+    .qr-btn-group {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
   </style>
 </head>
 <body>
@@ -569,7 +712,7 @@
     <div class="login-card">
       <span class="login-badge">🔐 보안 분리 관리자 전용 (/admin)</span>
       <h1>Check 관리자 대시보드</h1>
-      <p>분리 보관된 설문 응답 통계(`responses.json`) 및 초기 테스트 신청자 명단(`leads.json`)을 열람하려면 관리자 비밀번호를 입력해 주세요.</p>
+      <p>분리 보관된 익명 설문 통계 데이터 및 초기 테스트 신청자 명단을 열람하려면 관리자 비밀번호를 입력해 주세요.</p>
       <form id="admin-login-form">
         <input
           type="password"
@@ -590,7 +733,7 @@
     <header class="admin-header">
       <div class="admin-title-group">
         <h1>🌿 Check 수요조사 & 초기 테스트 신청 관리자 대시보드</h1>
-        <p>설문 통계(`data/responses.json`)와 신청자 연락처(`data/leads.json`)가 물리적으로 분리 보관됩니다.</p>
+        <p>익명 설문 통계 데이터와 신청자 연락처 데이터가 물리적으로 완전히 분리되어 안전하게 별도 보관됩니다.</p>
       </div>
       <div class="admin-header-actions">
         <button type="button" id="btn-refresh-stats" class="btn-action">🔄 실시간 새로고침</button>
@@ -621,14 +764,14 @@
     <!-- 1. 핵심 요약 KPI 카드 5종 -->
     <section class="kpi-grid">
       <div class="kpi-card">
-        <div class="kpi-label">설문 응답 수 (`responses.json`)</div>
+        <div class="kpi-label">익명 설문 응답 수</div>
         <div class="kpi-value teal" id="kpi-total-responses">0명</div>
         <div class="kpi-sub">개인정보 없는 순수 익명 통계</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">초기 테스트 신청자 (`leads.json`)</div>
+        <div class="kpi-label">초기 테스트 신청자</div>
         <div class="kpi-value coral" id="kpi-total-leads">0명</div>
-        <div class="kpi-sub">설문 응답과 물리적 분리 보관</div>
+        <div class="kpi-sub">익명 설문 통계와 분리 보관</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">초기 테스트 전환율</div>
@@ -641,9 +784,9 @@
         <div class="kpi-sub">가상 건강정보 시제품 인터뷰 대상</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">가족 접근권한·동의 중요 응답률</div>
+        <div class="kpi-label">최근 6개월 기록 재확인 비율</div>
         <div class="kpi-value coral" id="kpi-consent-rate">0%</div>
-        <div class="kpi-sub" id="kpi-consent-sub">Q4 사전동의/선택공유/카드공유 비율</div>
+        <div class="kpi-sub" id="kpi-consent-sub">Q6 1회 이상 재확인 경험 비율</div>
       </div>
     </section>
 
@@ -663,6 +806,101 @@
       </div>
     </section>
 
+    <!-- 2-B. 홍보용 스레드·맘카페 게시물 복사 키트 & 모바일 시연 QR코드 -->
+    <section class="panel">
+      <div class="panel-header">
+        <h2 class="panel-title">📣 바이럴 확산 키트 · 홍보 문구 템플릿 3종 & 설문 접속 QR코드</h2>
+        <span class="panel-badge">스레드 · 인스타그램 · 지역 맘카페 · 단톡방 즉시 배포용</span>
+      </div>
+      <div class="viral-kit-layout">
+        <!-- 홍보 문구 템플릿 3종 -->
+        <div class="templates-grid">
+          <!-- 템플릿 1: 스레드 / 인스타그램용 -->
+          <div class="template-card">
+            <div>
+              <div class="template-card-head">
+                <span class="template-tag">① 스레드(Threads) · 인스타용</span>
+              </div>
+              <textarea id="tpl-threads" class="template-textarea" readonly>부모님 모시고 병원 갔을 때 “지금 드시는 약이 뭐예요?”, “언제부터 그러셨어요?” 질문에 사진첩이랑 가족 단톡방 한참 스크롤해 본 적 있으신가요? 💦
+
+우리 가족의 ‘부모님 건강기록 관리 습관 유형’을 1분 만에 체크해 보고, 진료실 들어가기 전 꼭 챙겨야 할 팁 3가지도 확인해 보세요! (로그인·실명 없이 1분이면 끝나요)
+
+👉 1분 체크 바로가기:
+https://check-research.surge.sh
+
+#부모님병원동행 #부모님건강관리 #효도스타그램 #가족건강기록 #건강캘린더</textarea>
+            </div>
+            <button type="button" class="btn-copy-template" data-target="tpl-threads">
+              📋 스레드·인스타 홍보 문구 복사
+            </button>
+          </div>
+
+          <!-- 템플릿 2: 지역 맘카페 / 3050 커뮤니티용 -->
+          <div class="template-card">
+            <div>
+              <div class="template-card-head">
+                <span class="template-tag coral">② 지역 맘카페 · 커뮤니티용</span>
+              </div>
+              <textarea id="tpl-momcafe" class="template-textarea" readonly>[1분 테스트 공유] 친정·시부모님 병원 동행이나 약봉투 기록, 평소 어떻게 챙기고 계신가요? 🌱
+
+부모님 연세가 드실수록 여러 병원 처방약이나 증상 날짜를 챙겨야 할 일이 많아지는데, 막상 진료실 앞에 가면 사진첩이나 카톡방에서 예전 약봉투 사진 찾기가 쉽지 않더라고요.
+
+이번에 부모님 건강기록 정리 방식을 점검해 볼 수 있는 [1분 부모님 건강기록 관리 습관 유형 테스트]를 진행 중이라 함께 나누려고 가져왔어요.
+6문항만 가볍게 누르면 우리 가족의 기록 유형과 ‘병원 방문 전 필수 체크 팁 3가지’를 바로 볼 수 있습니다! (실제 약봉투 사진이나 민감정보는 일절 수집하지 않으니 안심하고 해보세요 😊)
+
+👉 우리 가족 건강기록 관리 유형 1분 체크:
+https://check-research.surge.sh</textarea>
+            </div>
+            <button type="button" class="btn-copy-template" data-target="tpl-momcafe">
+              📋 맘카페·커뮤니티 홍보 문구 복사
+            </button>
+          </div>
+
+          <!-- 템플릿 3: 지인 · 가족 단톡방용 -->
+          <div class="template-card">
+            <div>
+              <div class="template-card-head">
+                <span class="template-tag">③ 지인 · 가족 단톡방용</span>
+              </div>
+              <textarea id="tpl-kakao" class="template-textarea" readonly>혹시 부모님 병원 모시고 가거나 약 챙겨드릴 때 어디에 기록해 두시나요? 😊
+1분 만에 끝나는 ‘부모님 건강기록 관리 습관 유형’ 테스트인데, 결과에 나오는 병원 방문 전 필수 체크 팁 3가지가 꽤 유용해서 공유해요! 시간 되실 때 가볍게 한 번 해보세요 👇
+
+👉 1분 체크하러 가기:
+https://check-research.surge.sh</textarea>
+            </div>
+            <button type="button" class="btn-copy-template" data-target="tpl-kakao">
+              📋 지인·단톡방 홍보 문구 복사
+            </button>
+          </div>
+        </div>
+
+        <!-- 모바일 시연 및 이미지 첨부용 설문 접속 QR코드 -->
+        <div class="qr-box">
+          <div>
+            <h3>📱 모바일 시연 & 홍보 첨부용 QR</h3>
+            <p>카메라로 스캔하거나 이미지를 저장해 게시물·발표자료에 첨부하세요.</p>
+          </div>
+          <div class="qr-img-frame">
+            <img
+              id="admin-qr-img"
+              src="https://api.qrserver.com/v1/create-qr-code/?size=280x280&margin=8&data=https%3A%2F%2Fcheck-research.surge.sh"
+              alt="설문 접속 QR코드"
+              crossorigin="anonymous"
+            />
+          </div>
+          <div class="qr-url-badge" id="qr-target-url">https://check-research.surge.sh</div>
+          <div class="qr-btn-group">
+            <button type="button" id="btn-download-qr" class="btn-copy-template">
+              📥 QR코드 이미지 저장 (PNG)
+            </button>
+            <button type="button" id="btn-copy-survey-url" class="btn-action" style="justify-content: center;">
+              🔗 설문 링크만 원클릭 복사
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- 3. 4가지 부모님 건강기록 관리 습관 유형 분포 -->
     <section class="panel">
       <div class="panel-header">
@@ -674,21 +912,21 @@
       </div>
     </section>
 
-    <!-- 4. Q1~Q6 문항별 응답 통계 시각화 차트 -->
+    <!-- 4. Q1~Q7 문항별 응답 통계 시각화 차트 -->
     <section class="panel">
       <div class="panel-header">
-        <h2 class="panel-title">📈 Q1 ~ Q6 문항별 응답 비율 차트</h2>
-        <span class="panel-badge">비진단 기록 정리 · 건강 캘린더 · 가족 접근권한/동의 검증</span>
+        <h2 class="panel-title">📈 Q1 ~ Q7 문항별 & 응답자 연령대 비율 차트</h2>
+        <span class="panel-badge">비진단 기록 정리 · 건강 캘린더 · 가족 소통 · 연령대 분포</span>
       </div>
       <div class="questions-grid" id="question-stats-container">
         <!-- JS 렌더링 -->
       </div>
     </section>
 
-    <!-- 5. 초기 테스트 & 인터뷰 신청자 명단 (data/leads.json 분리 보관 + 개별 즉시 삭제 기능) -->
+    <!-- 5. 초기 테스트 & 인터뷰 신청자 명단 (분리 보관 + 개별 즉시 삭제 기능) -->
     <section class="panel">
       <div class="panel-header">
-        <h2 class="panel-title">💌 초기 테스트 & 인터뷰 신청자 명단 (`data/leads.json` 분리 보관)</h2>
+        <h2 class="panel-title">💌 초기 테스트 & 인터뷰 신청자 명단 (익명 통계와 분리 보관)</h2>
         <span class="panel-badge" id="leads-count-badge">총 0건</span>
       </div>
       <div class="table-responsive">
@@ -711,10 +949,10 @@
       </div>
     </section>
 
-    <!-- 6. 익명 설문 응답 원본 목록 (data/responses.json) -->
+    <!-- 6. 익명 설문 응답 원본 목록 -->
     <section class="panel">
       <div class="panel-header">
-        <h2 class="panel-title">🗂️ 익명 설문 응답 내역 (`data/responses.json` · 개인식별정보 없음)</h2>
+        <h2 class="panel-title">🗂️ 익명 설문 응답 & 1줄 자유응답(VOC) 내역 (개인식별정보 없음)</h2>
         <span class="panel-badge" id="responses-count-badge">총 0건</span>
       </div>
       <div class="table-responsive">
@@ -723,11 +961,12 @@
             <tr>
               <th>데이터 구분</th>
               <th>참여 일시</th>
-              <th>습관 유형 분류 (비진단)</th>
-              <th>점수</th>
-              <th>Q4 접근권한·동의 선호</th>
-              <th>Q5 핵심 기능 1순위</th>
-              <th>Q6 선호 이용 방식</th>
+              <th>연령대</th>
+              <th>습관 유형 안내 (비진단)</th>
+              <th>Q4 가족 소통·공유 범위</th>
+              <th>Q5 필요한 기능 1순위</th>
+              <th>Q6 최근 6개월 재확인 빈도</th>
+              <th>선택형 1줄 자유응답 (익명 VOC)</th>
             </tr>
           </thead>
           <tbody id="responses-table-body">
@@ -738,6 +977,7 @@
     </section>
   </div>
 
+  <script src="/js/api-client.js"></script>
   <script src="/js/admin.js"></script>
 </body>
 </html>
