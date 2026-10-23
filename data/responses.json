@@ -1,5 +1,22 @@
 [
   {
+    "id": "resp-1792752790662-1d04",
+    "createdAt": "2026-10-23T10:53:10.665Z",
+    "isSeed": false,
+    "answers": {
+      "Q1": "exp_multi_meds",
+      "Q2": "store_none",
+      "Q3": "recheck_med_list",
+      "Q4": "share_visit_summary",
+      "Q5": "feat_selective_share",
+      "Q6": "freq_zero",
+      "Q7": "age_30s"
+    },
+    "habitType": "type3",
+    "habitTypeName": "수첩·메모장 꼼꼼 기록 매니저형",
+    "vocComment": ""
+  },
+  {
     "id": "resp-1792730220134-420b",
     "createdAt": "2026-10-23T04:37:00.143Z",
     "isSeed": false,
