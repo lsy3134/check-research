@@ -737,7 +737,8 @@
       </div>
       <div class="admin-header-actions">
         <button type="button" id="btn-refresh-stats" class="btn-action">🔄 실시간 새로고침</button>
-        <button type="button" id="btn-reset-seed" class="btn-action">🧪 시연용 샘플 데이터 초기화</button>
+        <button type="button" id="btn-clear-seed" class="btn-action" style="background:#FEF2F2; color:#DC2626; border-color:#FECACA;">🗑️ 시연용(Seed) 전체 삭제</button>
+        <button type="button" id="btn-reset-seed" class="btn-action">🧪 시연용 샘플 복원</button>
         <button type="button" id="btn-logout" class="btn-action">로그아웃</button>
       </div>
     </header>
@@ -941,6 +942,7 @@ https://check-research.surge.sh</textarea>
               <th>Q5 필요한 기능 1순위</th>
               <th>Q6 최근 6개월 재확인 빈도</th>
               <th>선택형 1줄 자유응답 (익명 VOC)</th>
+              <th>개별 삭제</th>
             </tr>
           </thead>
           <tbody id="responses-table-body">
@@ -977,7 +979,7 @@ https://check-research.surge.sh</textarea>
     </section>
   </div>
 
-  <script src="/js/api-client.js?v=20261024_v5"></script>
-  <script src="/js/admin.js?v=20261024_v5"></script>
+  <script src="/js/api-client.js?v=20261024_v6"></script>
+  <script src="/js/admin.js?v=20261024_v6"></script>
 </body>
 </html>

@@ -2,7 +2,7 @@
    Check 24/7 클라우드 통합 API 어댑터 (api-client.js)
    - PC가 꺼져 있어도 365일 24시간 모든 스마트폰·PC의 응답을 한곳으로 실시간 수집
    - 한글 인코딩 깨짐(?? / ) 원천 차단 (URI 안전 인코딩 + 코드 기반 한글명 자동 매핑)
-   - 이전 버전 localStorage(check_responses_v2)에 저장된 깨진 캐시 자동 정화 및 실제 응답 복구
+   - 시연용(Seed) 전체 삭제 / 개별 삭제(설문·리드) 즉시 반영 및 영구 유지 지원
    ========================================================= */
 (function () {
   const ORIGINAL_FETCH = window.fetch.bind(window);
@@ -13,7 +13,8 @@
   const LEADS_KEY = 'check_leads_v5_clean';
   const LEGACY_LEADS_KEY = 'check_leads_v2';
   const SYNCED_IDS_KEY = 'check_synced_ids_v5';
-  const DELETED_LEADS_KEY = 'check_deleted_leads_v5';
+  const DELETED_RESPS_KEY = 'check_deleted_resps_v6';
+  const DELETED_LEADS_KEY = 'check_deleted_leads_v6';
   const ADMIN_PW = 'check2026!';
 
   const HABIT_TYPE_META = {
@@ -30,7 +31,6 @@
     'resp-1792499706693-21da'
   ]);
 
-  // 기존에 수집된 실제 고객 응답 4건 (깨끗한 한글 원본)
   function getInitialRealResponses() {
     return [
       {
@@ -295,7 +295,6 @@
     }
   };
 
-  // 깨진 문자열(?? 또는 ) 감지 및 정규화 헬퍼
   function isGarbledText(str) {
     if (!str) return false;
     return /\?\?|\uFFFD/.test(String(str));
@@ -314,9 +313,9 @@
     };
   }
 
-  function getSyncedIdsSet() {
+  function getIdSetFromStorage(key) {
     try {
-      const raw = localStorage.getItem(SYNCED_IDS_KEY);
+      const raw = localStorage.getItem(key);
       if (raw) {
         const arr = JSON.parse(raw);
         if (Array.isArray(arr)) return new Set(arr);
@@ -325,15 +324,23 @@
     return new Set();
   }
 
-  function markIdSynced(id) {
+  function saveIdSetToStorage(key, setObj) {
     try {
-      const set = getSyncedIdsSet();
-      set.add(id);
-      localStorage.setItem(SYNCED_IDS_KEY, JSON.stringify(Array.from(set)));
+      localStorage.setItem(key, JSON.stringify(Array.from(setObj)));
     } catch (e) {}
   }
 
-  // 클라우드 스트림에 단건 이벤트 발행 (encodeURIComponent를 사용해 한글 깨짐 0% 보장)
+  function getSyncedIdsSet() {
+    return getIdSetFromStorage(SYNCED_IDS_KEY);
+  }
+
+  function markIdSynced(id) {
+    const set = getSyncedIdsSet();
+    set.add(id);
+    saveIdSetToStorage(SYNCED_IDS_KEY, set);
+  }
+
+  // 클라우드 스트림에 단건 이벤트 발행
   async function publishStreamEvent(streamUrl, payloadObj) {
     try {
       const safeBody = 'ENC:' + encodeURIComponent(JSON.stringify(payloadObj));
@@ -379,8 +386,7 @@
     return events;
   }
 
-  // 이전 버전 localStorage(check_responses_v2)에서 실제 사용자가 방금 응답한 내역만 깨끗하게 정화·추출
-  function extractCleanCustomResponsesFromStorage() {
+  function extractCleanCustomResponsesFromStorage(deletedSet) {
     const results = [];
     const seen = new Set();
     for (const key of [RESP_KEY, LEGACY_RESP_KEY]) {
@@ -395,7 +401,8 @@
             item.id &&
             !item.isSeed &&
             !INITIAL_REAL_IDS.has(item.id) &&
-            !seen.has(item.id)
+            !seen.has(item.id) &&
+            !(deletedSet && deletedSet.has(item.id))
           ) {
             const clean = sanitizeResponseItem(item);
             if (clean) {
@@ -409,11 +416,11 @@
     return results;
   }
 
-  // 휴대폰이나 PC 브라우저에 이전 미전송 응답이 남아 있다면 딱 1번만 클라우드로 복구 전송
   async function recoverUnsyncedLocalItemsOnce() {
     try {
       const syncedSet = getSyncedIdsSet();
-      const customItems = extractCleanCustomResponsesFromStorage();
+      const deletedSet = getIdSetFromStorage(DELETED_RESPS_KEY);
+      const customItems = extractCleanCustomResponsesFromStorage(deletedSet);
       for (const item of customItems) {
         if (!syncedSet.has(item.id)) {
           markIdSynced(item.id);
@@ -426,16 +433,22 @@
     } catch (e) {}
   }
 
-  // 24/7 클라우드 DB 조회 및 스마트 병합 (익명 응답용)
+  // 24/7 클라우드 DB 조회 및 스마트 병합 (익명 응답용 - 삭제된 항목 철저히 제외)
   async function readCloudResponses() {
     const map = new Map();
+    const deletedIds = getIdSetFromStorage(DELETED_RESPS_KEY);
 
-    // 1) 로컬에 저장된 신규 사용자 응답 먼저 로드 (정화된 한글 적용)
-    for (const item of extractCleanCustomResponsesFromStorage()) {
+    // 1) 기본 실제 응답 4건 + 시연용 Seed 5건 먼저 배치
+    for (const item of [...getInitialRealResponses(), ...getSeedResponses()]) {
+      map.set(item.id, { ...item });
+    }
+
+    // 2) 로컬에 저장된 신규 사용자 응답 병합
+    for (const item of extractCleanCustomResponsesFromStorage(deletedIds)) {
       map.set(item.id, item);
     }
 
-    // 2) 24/7 클라우드 스트림 이벤트 수신 및 병합
+    // 3) 24/7 클라우드 스트림 이벤트 수신 및 병합
     const events = await fetchStreamEvents(CLOUD_RESP_STREAM);
     for (const ev of events) {
       if (ev.action === 'upsert_response' && ev.item && ev.item.id) {
@@ -455,19 +468,25 @@
           target.vocComment = ev.vocComment || '';
           map.set(ev.responseId, target);
         }
+      } else if (ev.action === 'delete_response' && ev.responseId) {
+        deletedIds.add(ev.responseId);
+        map.delete(ev.responseId);
+      } else if (ev.action === 'clear_seed_responses') {
+        for (const seedItem of getSeedResponses()) {
+          deletedIds.add(seedItem.id);
+          map.delete(seedItem.id);
+        }
+      } else if (ev.action === 'reset_seed_responses') {
+        for (const seedItem of getSeedResponses()) {
+          deletedIds.delete(seedItem.id);
+          map.set(seedItem.id, { ...seedItem });
+        }
       }
     }
 
-    // 3) 기본 실제 응답 4건 + 시연용 Seed 5건은 항상 완벽한 한글 원본으로 보장 (깨진 캐시가 절대 덮어쓰지 못함)
-    for (const item of [...getInitialRealResponses(), ...getSeedResponses()]) {
-      const existing = map.get(item.id);
-      map.set(item.id, {
-        ...item,
-        vocComment:
-          existing && existing.vocComment && !isGarbledText(existing.vocComment)
-            ? existing.vocComment
-            : item.vocComment
-      });
+    // 삭제 목록에 있는 ID 최종 제거
+    for (const delId of deletedIds) {
+      map.delete(delId);
     }
 
     const mergedList = Array.from(map.values()).sort((a, b) => {
@@ -476,25 +495,24 @@
 
     try {
       localStorage.setItem(RESP_KEY, JSON.stringify(mergedList));
+      saveIdSetToStorage(DELETED_RESPS_KEY, deletedIds);
       localStorage.removeItem(LEGACY_RESP_KEY);
     } catch (e) {}
 
     return mergedList;
   }
 
-  // 24/7 클라우드 DB 조회 및 스마트 병합 (분리된 신청자 연락처용)
+  // 24/7 클라우드 DB 조회 및 스마트 병합 (분리된 신청자 연락처용 - 삭제된 항목 철저히 제외)
   async function readCloudLeads() {
     const map = new Map();
-    const deletedIds = new Set();
+    const deletedIds = getIdSetFromStorage(DELETED_LEADS_KEY);
 
-    try {
-      const delRaw = localStorage.getItem(DELETED_LEADS_KEY);
-      if (delRaw) {
-        const delArr = JSON.parse(delRaw);
-        if (Array.isArray(delArr)) delArr.forEach((id) => deletedIds.add(id));
-      }
-    } catch (e) {}
+    // 1) 기본 시연용 Seed 3건 배치
+    for (const item of getSeedLeads()) {
+      map.set(item.id, { ...item });
+    }
 
+    // 2) 로컬에 저장된 신규 신청자 병합
     for (const key of [LEADS_KEY, LEGACY_LEADS_KEY]) {
       try {
         const raw = localStorage.getItem(key);
@@ -502,7 +520,7 @@
           const localArr = JSON.parse(raw);
           if (Array.isArray(localArr)) {
             for (const item of localArr) {
-              if (item && item.id && !item.isSeed && !isGarbledText(item.nickname)) {
+              if (item && item.id && !item.isSeed && !isGarbledText(item.nickname) && !deletedIds.has(item.id)) {
                 map.set(item.id, { ...item });
               }
             }
@@ -511,12 +529,7 @@
       } catch (e) {}
     }
 
-    // 기본 시연용 Seed 3건 (항상 깨끗한 한글 보장)
-    for (const item of getSeedLeads()) {
-      map.set(item.id, { ...item });
-    }
-
-    // 24/7 클라우드 스트림 이벤트 수신 및 병합
+    // 3) 24/7 클라우드 스트림 이벤트 수신 및 병합
     const events = await fetchStreamEvents(CLOUD_LEADS_STREAM);
     for (const ev of events) {
       if (ev.action === 'upsert_lead' && ev.item && ev.item.id) {
@@ -525,6 +538,11 @@
       } else if (ev.action === 'delete_lead' && ev.leadId) {
         deletedIds.add(ev.leadId);
         map.delete(ev.leadId);
+      } else if (ev.action === 'clear_seed_leads') {
+        for (const seedItem of getSeedLeads()) {
+          deletedIds.add(seedItem.id);
+          map.delete(seedItem.id);
+        }
       } else if (ev.action === 'reset_seed_leads') {
         for (const seedItem of getSeedLeads()) {
           deletedIds.delete(seedItem.id);
@@ -533,6 +551,7 @@
       }
     }
 
+    // 삭제 목록에 있는 ID 최종 제거
     for (const delId of deletedIds) {
       map.delete(delId);
     }
@@ -543,7 +562,7 @@
 
     try {
       localStorage.setItem(LEADS_KEY, JSON.stringify(mergedLeads));
-      localStorage.setItem(DELETED_LEADS_KEY, JSON.stringify(Array.from(deletedIds)));
+      saveIdSetToStorage(DELETED_LEADS_KEY, deletedIds);
       localStorage.removeItem(LEGACY_LEADS_KEY);
     } catch (e) {}
 
@@ -584,7 +603,7 @@
     const headers = options.headers || {};
     const pw = headers['x-admin-password'] || headers['X-Admin-Password'] || '';
 
-    // 1. POST /api/responses (익명 설문 응답 저장 - 단 1회 POST)
+    // 1. POST /api/responses (익명 설문 응답 저장)
     if (path === '/api/responses' && method === 'POST') {
       const body = JSON.parse(options.body || '{}');
       const hType = body.habitType && HABIT_TYPE_META[body.habitType] ? body.habitType : 'type2';
@@ -620,7 +639,7 @@
       return jsonResponse({ ok: true, responseId: item.id }, 201);
     }
 
-    // 1-B. POST /api/responses/voc (선택형 1줄 자유응답 저장)
+    // 1-B. POST /api/responses/voc
     if (path === '/api/responses/voc' && method === 'POST') {
       const body = JSON.parse(options.body || '{}');
       const cleanVoc = String(body.vocComment || '').trim().slice(0, 300);
@@ -648,7 +667,7 @@
       return jsonResponse({ ok: false, message: '응답을 찾을 수 없습니다.' }, 404);
     }
 
-    // 2. POST /api/leads (분리된 신청자 연락처 저장)
+    // 2. POST /api/leads
     if (path === '/api/leads' && method === 'POST') {
       const body = JSON.parse(options.body || '{}');
       const item = {
@@ -757,27 +776,69 @@
       });
     }
 
-    // 4. DELETE /api/admin/leads/:id
+    // 4-A. DELETE /api/admin/responses/:id (설문 응답 개별 삭제)
+    if (path.startsWith('/api/admin/responses/') && method === 'DELETE') {
+      const targetId = decodeURIComponent(path.replace('/api/admin/responses/', ''));
+      const deletedIds = getIdSetFromStorage(DELETED_RESPS_KEY);
+      deletedIds.add(targetId);
+      saveIdSetToStorage(DELETED_RESPS_KEY, deletedIds);
+
+      await publishStreamEvent(CLOUD_RESP_STREAM, {
+        action: 'delete_response',
+        responseId: targetId
+      });
+      return jsonResponse({ ok: true, deletedId: targetId, message: '선택한 설문 응답이 삭제되었습니다.' });
+    }
+
+    // 4-B. DELETE /api/admin/leads/:id (신청자 연락처 개별 삭제)
     if (path.startsWith('/api/admin/leads/') && method === 'DELETE') {
       const targetId = decodeURIComponent(path.replace('/api/admin/leads/', ''));
+      const deletedIds = getIdSetFromStorage(DELETED_LEADS_KEY);
+      deletedIds.add(targetId);
+      saveIdSetToStorage(DELETED_LEADS_KEY, deletedIds);
+
       await publishStreamEvent(CLOUD_LEADS_STREAM, {
         action: 'delete_lead',
         leadId: targetId
       });
-      await readCloudLeads();
       return jsonResponse({ ok: true, deletedId: targetId, message: '신청자 개인정보가 영구 삭제되었습니다.' });
     }
 
-    // 5. POST /api/admin/reset-seed
-    if (path === '/api/admin/reset-seed' && method === 'POST') {
-      await publishStreamEvent(CLOUD_LEADS_STREAM, {
-        action: 'reset_seed_leads'
-      });
-      await readCloudResponses();
-      await readCloudLeads();
+    // 5-A. POST /api/admin/clear-seed (시연용 Seed 데이터 전체 삭제)
+    if (path === '/api/admin/clear-seed' && method === 'POST') {
+      const deletedResps = getIdSetFromStorage(DELETED_RESPS_KEY);
+      for (const s of getSeedResponses()) deletedResps.add(s.id);
+      saveIdSetToStorage(DELETED_RESPS_KEY, deletedResps);
+
+      const deletedLeads = getIdSetFromStorage(DELETED_LEADS_KEY);
+      for (const l of getSeedLeads()) deletedLeads.add(l.id);
+      saveIdSetToStorage(DELETED_LEADS_KEY, deletedLeads);
+
+      await publishStreamEvent(CLOUD_RESP_STREAM, { action: 'clear_seed_responses' });
+      await publishStreamEvent(CLOUD_LEADS_STREAM, { action: 'clear_seed_leads' });
+
       return jsonResponse({
         ok: true,
-        message: '실제 고객 응답은 그대로 유지하고, 시연용 가상 데이터(설문 5건, 신청 3건)만 기본값으로 복원했습니다.'
+        message: '시연용 가상 데이터(Seed: 설문 5건, 신청 3건)가 모두 삭제되었습니다. 실제 고객 응답(Real)만 표시됩니다.'
+      });
+    }
+
+    // 5-B. POST /api/admin/reset-seed (시연용 샘플 데이터 복원)
+    if (path === '/api/admin/reset-seed' && method === 'POST') {
+      const deletedResps = getIdSetFromStorage(DELETED_RESPS_KEY);
+      for (const s of getSeedResponses()) deletedResps.delete(s.id);
+      saveIdSetToStorage(DELETED_RESPS_KEY, deletedResps);
+
+      const deletedLeads = getIdSetFromStorage(DELETED_LEADS_KEY);
+      for (const l of getSeedLeads()) deletedLeads.delete(l.id);
+      saveIdSetToStorage(DELETED_LEADS_KEY, deletedLeads);
+
+      await publishStreamEvent(CLOUD_RESP_STREAM, { action: 'reset_seed_responses' });
+      await publishStreamEvent(CLOUD_LEADS_STREAM, { action: 'reset_seed_leads' });
+
+      return jsonResponse({
+        ok: true,
+        message: '실제 고객 응답은 그대로 유지하고, 시연용 가상 데이터(설문 5건, 신청 3건)를 기본값으로 복원했습니다.'
       });
     }
 
@@ -862,7 +923,6 @@
     return jsonResponse({ ok: false, message: 'Not Found' }, 404);
   }
 
-  // 페이지 진입 시: 로컬 미전송 응답 1회 복구 체크
   async function initClient() {
     const countEl = document.getElementById('live-participant-count');
     if (countEl) {

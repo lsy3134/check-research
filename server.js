@@ -523,7 +523,28 @@ app.get('/api/admin/stats', requireAdminAuth, (req, res) => {
   }
 });
 
-// 4. 신청자 개인정보 개별 즉시 삭제 API (DELETE /api/admin/leads/:id)
+// 4-A. 설문 응답 개별 삭제 API (DELETE /api/admin/responses/:id)
+app.delete('/api/admin/responses/:id', requireAdminAuth, (req, res) => {
+  try {
+    const targetId = req.params.id;
+    const responses = readResponses();
+    const index = responses.findIndex((r) => r.id === targetId);
+    if (index === -1) {
+      return res.status(404).json({ ok: false, message: '해당 설문 응답 항목을 찾을 수 없습니다.' });
+    }
+    responses.splice(index, 1);
+    writeResponses(responses);
+    return res.json({
+      ok: true,
+      deletedId: targetId,
+      message: '선택한 설문 응답이 삭제되었습니다.'
+    });
+  } catch (err) {
+    return res.status(500).json({ ok: false, message: '삭제 처리 중 오류가 발생했습니다.' });
+  }
+});
+
+// 4-B. 신청자 개인정보 개별 즉시 삭제 API (DELETE /api/admin/leads/:id)
 app.delete('/api/admin/leads/:id', requireAdminAuth, (req, res) => {
   try {
     const targetId = req.params.id;
@@ -548,7 +569,23 @@ app.delete('/api/admin/leads/:id', requireAdminAuth, (req, res) => {
   }
 });
 
-// 5. 관리자 시드 데이터 초기화 API (POST /api/admin/reset-seed)
+// 5-A. 관리자 시연용(Seed) 데이터 전체 삭제 API (POST /api/admin/clear-seed)
+app.post('/api/admin/clear-seed', requireAdminAuth, (req, res) => {
+  try {
+    const realResponses = readResponses().filter((r) => !r.isSeed);
+    const realLeads = readLeads().filter((l) => !l.isSeed);
+    writeResponses(realResponses);
+    writeLeads(realLeads);
+    return res.json({
+      ok: true,
+      message: '시연용 가상 데이터(Seed: 설문 5건, 신청 3건)가 모두 삭제되었습니다. 실제 고객 응답(Real)만 표시됩니다.'
+    });
+  } catch (err) {
+    return res.status(500).json({ ok: false, message: '시연용 데이터 삭제 중 오류가 발생했습니다.' });
+  }
+});
+
+// 5-B. 관리자 시드 데이터 복원 API (POST /api/admin/reset-seed)
 // ※ 실제 고객 응답(isSeed: false)은 절대 삭제하지 않고 보존하며, 시연용 가상 데이터(isSeed: true)만 기본값으로 복원
 app.post('/api/admin/reset-seed', requireAdminAuth, (req, res) => {
   try {

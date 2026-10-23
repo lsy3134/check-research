@@ -40,6 +40,7 @@
 
   // 액션 버튼
   const btnRefreshStats = document.getElementById('btn-refresh-stats');
+  const btnClearSeed = document.getElementById('btn-clear-seed');
   const btnResetSeed = document.getElementById('btn-reset-seed');
   const btnLogout = document.getElementById('btn-logout');
   const btnExportResponses = document.getElementById('btn-export-responses');
@@ -288,7 +289,7 @@
     if (responses.length === 0) {
       responsesTableBody.innerHTML = `
         <tr>
-          <td colspan="8" style="text-align:center; padding: 28px; color: #64748B;">
+          <td colspan="9" style="text-align:center; padding: 28px; color: #64748B;">
             해당 필터 조건에 맞는 설문 응답 내역이 없습니다.
           </td>
         </tr>
@@ -324,9 +325,46 @@
           <td>${escapeHtml(q5Label)}</td>
           <td>${escapeHtml(q6Label)}</td>
           <td>${vocText}</td>
+          <td>
+            <button type="button" class="btn-delete-row btn-delete-resp" data-resp-id="${escapeHtml(resp.id)}">
+              🗑️ 개별 삭제
+            </button>
+          </td>
         `;
         responsesTableBody.appendChild(tr);
       });
+
+      // 설문 응답 개별 삭제 이벤트 바인딩
+      responsesTableBody.querySelectorAll('.btn-delete-resp').forEach((delBtn) => {
+        delBtn.addEventListener('click', async () => {
+          const respId = delBtn.getAttribute('data-resp-id');
+          if (!respId) return;
+          if (!confirm('선택하신 설문 응답 내역을 삭제하시겠습니까?')) {
+            return;
+          }
+          await deleteResponseById(respId);
+        });
+      });
+    }
+  }
+
+  // 설문 응답 개별 삭제 요청 (DELETE /api/admin/responses/:id)
+  async function deleteResponseById(respId) {
+    try {
+      const res = await fetch(`/api/admin/responses/${encodeURIComponent(respId)}`, {
+        method: 'DELETE',
+        headers: {
+          'x-admin-password': currentPassword
+        }
+      });
+      const json = await res.json();
+      if (!res.ok || !json.ok) {
+        alert(json.message || '삭제 처리에 실패했습니다.');
+        return;
+      }
+      fetchDashboardStats(currentPassword, currentFilter, false);
+    } catch (err) {
+      alert('서버와 통신 중 오류가 발생했습니다.');
     }
   }
 
@@ -366,7 +404,31 @@
     }
   });
 
-  // 시연용 샘플 데이터 초기화
+  // 시연용(Seed) 데이터 전체 삭제
+  if (btnClearSeed) {
+    btnClearSeed.addEventListener('click', async () => {
+      if (!confirm('실제 고객 응답(Real)은 그대로 보존하고, 시연용 가상 데이터(Seed: 설문 5건, 신청 3건)를 모두 삭제하시겠습니까?')) {
+        return;
+      }
+      try {
+        const res = await fetch('/api/admin/clear-seed', {
+          method: 'POST',
+          headers: { 'x-admin-password': currentPassword }
+        });
+        const json = await res.json();
+        if (json.ok) {
+          alert(json.message);
+          fetchDashboardStats(currentPassword, currentFilter, false);
+        } else {
+          alert(json.message || '삭제 처리에 실패했습니다.');
+        }
+      } catch (e) {
+        alert('서버 통신 중 오류가 발생했습니다.');
+      }
+    });
+  }
+
+  // 시연용 샘플 데이터 복원
   btnResetSeed.addEventListener('click', async () => {
     if (!confirm('실제 고객 응답은 그대로 유지하고, 시연용 가상 데이터(설문 5건, 신청 3건)만 기본값으로 복원하시겠습니까?')) {
       return;
