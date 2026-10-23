@@ -300,6 +300,13 @@
           ? '<span class="badge-seed">[시연용 Seed]</span>'
           : '<span class="badge-real">[실제 응답 Real]</span>';
 
+        const HABIT_TYPE_LABELS = {
+          type1: '마음만은 든든, 기억·대화 중심 확인형',
+          type2: '사진첩·단톡방 스크롤 탐정형',
+          type3: '수첩·메모장 꼼꼼 기록 매니저형',
+          type4: '체계적인 스마트 동행 기록 프로형'
+        };
+        const cleanTypeName = HABIT_TYPE_LABELS[resp.habitType] || resp.habitTypeName || '-';
         const q4Label = SHORT_LABELS[resp.answers?.Q4] || resp.answers?.Q4 || '-';
         const q5Label = SHORT_LABELS[resp.answers?.Q5] || resp.answers?.Q5 || '-';
         const q6Label = SHORT_LABELS[resp.answers?.Q6] || resp.answers?.Q6 || '-';
@@ -312,7 +319,7 @@
           <td>${seedBadge}</td>
           <td>${formatDateTime(resp.createdAt)}</td>
           <td><strong>${escapeHtml(q7Label)}</strong></td>
-          <td><strong>${escapeHtml(resp.habitTypeName)}</strong></td>
+          <td><strong>${escapeHtml(cleanTypeName)}</strong></td>
           <td>${escapeHtml(q4Label)}</td>
           <td>${escapeHtml(q5Label)}</td>
           <td>${escapeHtml(q6Label)}</td>
