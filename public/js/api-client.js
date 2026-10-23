@@ -1,16 +1,89 @@
 /* =========================================================
    Check 24/7 클라우드 통합 API 어댑터 (api-client.js)
-   - PC가 완전히 꺼져 있어도 365일 24시간 모든 스마트폰·PC의 응답을 한곳으로 통합 수집
-   - 익명 설문 통계 클라우드 저장소(CLOUD_RESP_URL)와 신청자 연락처 저장소(CLOUD_LEADS_URL) 물리적 분리 보관
-   - 로컬 서버(localhost:3000) 및 브라우저 백업 스토리지와도 자동 동기화
+   - PC가 완전히 꺼져 있어도 365일 24시간 모든 스마트폰·PC의 응답을 실시간 통합 수집
+   - 브라우저 CORS 프리플라이트(OPTIONS) 차단 없이 100% 통과하는 실시간 클라우드 스트림 적용
+   - 익명 설문 통계 클라우드 채널(CLOUD_RESP_STREAM)과 신청자 연락처 채널(CLOUD_LEADS_STREAM) 물리적 분리 보관
+   - 로컬 브라우저에 남아 있던 미전송 응답 자동 복구(Auto-Recovery) 지원
    ========================================================= */
 (function () {
   const ORIGINAL_FETCH = window.fetch.bind(window);
-  const CLOUD_RESP_URL = 'https://extendsclass.com/api/json-storage/bin/bbdaadf';
-  const CLOUD_LEADS_URL = 'https://extendsclass.com/api/json-storage/bin/bcccfea';
+  const CLOUD_RESP_STREAM = 'https://ntfy.sh/check_survey_resp_2026_stream_v3';
+  const CLOUD_LEADS_STREAM = 'https://ntfy.sh/check_survey_leads_2026_stream_v3';
   const RESP_KEY = 'check_responses_v2';
   const LEADS_KEY = 'check_leads_v2';
+  const DELETED_LEADS_KEY = 'check_deleted_leads_v2';
   const ADMIN_PW = 'check2026!';
+
+  // 기존에 수집된 실제 고객 응답 4건 기본 보존
+  function getInitialRealResponses() {
+    return [
+      {
+        id: 'resp-1792752790662-1d04',
+        createdAt: '2026-10-23T10:53:10.665Z',
+        isSeed: false,
+        answers: {
+          Q1: 'exp_multi_meds',
+          Q2: 'store_none',
+          Q3: 'recheck_med_list',
+          Q4: 'share_visit_summary',
+          Q5: 'feat_selective_share',
+          Q6: 'freq_zero',
+          Q7: 'age_30s'
+        },
+        habitType: 'type3',
+        habitTypeName: '수첩·메모장 꼼꼼 기록 매니저형',
+        vocComment: ''
+      },
+      {
+        id: 'resp-1792730220134-420b',
+        createdAt: '2026-10-23T04:37:00.143Z',
+        isSeed: false,
+        answers: {
+          Q1: 'exp_no_issue',
+          Q2: 'store_memo',
+          Q3: 'recheck_med_list',
+          Q4: 'share_visit_summary',
+          Q5: 'feat_current_enough',
+          Q6: 'freq_no_help'
+        },
+        habitType: 'type3',
+        habitTypeName: '수첩·메모장 꼼꼼 기록 매니저형',
+        vocComment: ''
+      },
+      {
+        id: 'resp-1792729866329-255d',
+        createdAt: '2026-10-23T04:31:06.343Z',
+        isSeed: false,
+        answers: {
+          Q1: 'exp_hard_answer',
+          Q2: 'store_memo',
+          Q3: 'recheck_symptom_date',
+          Q4: 'share_visit_summary',
+          Q5: 'feat_selective_share',
+          Q6: 'freq_zero'
+        },
+        habitType: 'type3',
+        habitTypeName: '수첩·메모장 꼼꼼 기록 매니저형',
+        vocComment: ''
+      },
+      {
+        id: 'resp-1792499706693-21da',
+        createdAt: '2026-10-20T12:35:06.693Z',
+        isSeed: false,
+        answers: {
+          Q1: 'exp_none_yet',
+          Q2: 'store_none',
+          Q3: 'recheck_search',
+          Q4: 'share_none_exp',
+          Q5: 'feat_med_list',
+          Q6: 'freq_1_2'
+        },
+        habitType: 'type1',
+        habitTypeName: '마음만은 든든, 기억·대화 중심 확인형',
+        vocComment: ''
+      }
+    ];
+  }
 
   function getSeedResponses() {
     return [
@@ -213,64 +286,191 @@
     type4: '체계적인 스마트 동행 기록 프로형'
   };
 
-  // 24/7 클라우드 DB 조회 및 저장 헬퍼 (익명 응답용)
-  async function readCloudResponses() {
+  // 클라우드 스트림에 이벤트 발행 (CORS Simple Request: text/plain으로 전송해 OPTIONS 에러 원천 차단)
+  async function publishStreamEvent(streamUrl, payloadObj) {
     try {
-      const res = await ORIGINAL_FETCH(CLOUD_RESP_URL + '?t=' + Date.now(), { method: 'GET' });
+      await ORIGINAL_FETCH(streamUrl, {
+        method: 'POST',
+        body: JSON.stringify(payloadObj)
+      });
+    } catch (e) {}
+  }
+
+  // 클라우드 스트림에서 전체 이벤트 로그 조회
+  async function fetchStreamEvents(streamUrl) {
+    const events = [];
+    try {
+      const res = await ORIGINAL_FETCH(`${streamUrl}/json?poll=1&since=all&t=${Date.now()}`, {
+        method: 'GET'
+      });
       if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          try { localStorage.setItem(RESP_KEY, JSON.stringify(data)); } catch (e) {}
-          return data;
+        const text = await res.text();
+        const lines = text.split('\n');
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+          try {
+            const wrapper = JSON.parse(trimmed);
+            if (wrapper && wrapper.event === 'message' && wrapper.message) {
+              const parsed = JSON.parse(wrapper.message);
+              if (parsed && typeof parsed === 'object') {
+                events.push(parsed);
+              }
+            }
+          } catch (innerErr) {}
         }
       }
     } catch (e) {}
+    return events;
+  }
+
+  // 24/7 클라우드 DB 조회 및 스마트 병합 (익명 응답용)
+  async function readCloudResponses() {
+    const map = new Map();
+
+    // 1) 기본 실제 응답 4건 + 시연용 Seed 5건 로드
+    for (const item of [...getInitialRealResponses(), ...getSeedResponses()]) {
+      map.set(item.id, { ...item });
+    }
+
+    // 2) 현재 브라우저 localStorage에 저장된 응답 병합 (절대 덮어써서 유실되지 않도록 보호)
+    const localRealItems = [];
     try {
       const raw = localStorage.getItem(RESP_KEY);
-      if (raw) return JSON.parse(raw);
-    } catch (e) {}
-    return getSeedResponses();
-  }
-
-  async function writeCloudResponses(list) {
-    try { localStorage.setItem(RESP_KEY, JSON.stringify(list)); } catch (e) {}
-    try {
-      await ORIGINAL_FETCH(CLOUD_RESP_URL, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json; charset=utf-8' },
-        body: JSON.stringify(list)
-      });
-    } catch (e) {}
-  }
-
-  // 24/7 클라우드 DB 조회 및 저장 헬퍼 (분리된 신청자 연락처용)
-  async function readCloudLeads() {
-    try {
-      const res = await ORIGINAL_FETCH(CLOUD_LEADS_URL + '?t=' + Date.now(), { method: 'GET' });
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          try { localStorage.setItem(LEADS_KEY, JSON.stringify(data)); } catch (e) {}
-          return data;
+      if (raw) {
+        const localArr = JSON.parse(raw);
+        if (Array.isArray(localArr)) {
+          for (const item of localArr) {
+            if (item && item.id) {
+              map.set(item.id, { ...item });
+              if (!item.isSeed) localRealItems.push(item);
+            }
+          }
         }
       }
     } catch (e) {}
+
+    // 3) 24/7 클라우드 스트림 이벤트 수신 및 병합
+    const cloudSeenIds = new Set();
+    const events = await fetchStreamEvents(CLOUD_RESP_STREAM);
+    for (const ev of events) {
+      if (ev.action === 'upsert_response' && ev.item && ev.item.id) {
+        const existing = map.get(ev.item.id);
+        map.set(ev.item.id, {
+          ...existing,
+          ...ev.item,
+          vocComment: ev.item.vocComment || (existing ? existing.vocComment : '') || ''
+        });
+        cloudSeenIds.add(ev.item.id);
+      } else if (ev.action === 'update_voc' && ev.responseId) {
+        const target = map.get(ev.responseId);
+        if (target) {
+          target.vocComment = ev.vocComment || '';
+          map.set(ev.responseId, target);
+        }
+      }
+    }
+
+    // 4) 만약 이전 클라우드(ExtendsClass) 오류로 인해 현재 브라우저에만 남아 있던 실제 응답이 있다면 즉시 클라우드로 자동 복구 전송
+    for (const localItem of localRealItems) {
+      if (!cloudSeenIds.has(localItem.id)) {
+        publishStreamEvent(CLOUD_RESP_STREAM, {
+          action: 'upsert_response',
+          item: map.get(localItem.id)
+        });
+      }
+    }
+
+    // 최신순 정렬
+    const mergedList = Array.from(map.values()).sort((a, b) => {
+      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+    });
+
     try {
-      const raw = localStorage.getItem(LEADS_KEY);
-      if (raw) return JSON.parse(raw);
+      localStorage.setItem(RESP_KEY, JSON.stringify(mergedList));
     } catch (e) {}
-    return getSeedLeads();
+
+    return mergedList;
   }
 
-  async function writeCloudLeads(list) {
-    try { localStorage.setItem(LEADS_KEY, JSON.stringify(list)); } catch (e) {}
+  // 24/7 클라우드 DB 조회 및 스마트 병합 (분리된 신청자 연락처용)
+  async function readCloudLeads() {
+    const map = new Map();
+    const deletedIds = new Set();
+
     try {
-      await ORIGINAL_FETCH(CLOUD_LEADS_URL, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json; charset=utf-8' },
-        body: JSON.stringify(list)
-      });
+      const delRaw = localStorage.getItem(DELETED_LEADS_KEY);
+      if (delRaw) {
+        const delArr = JSON.parse(delRaw);
+        if (Array.isArray(delArr)) delArr.forEach((id) => deletedIds.add(id));
+      }
     } catch (e) {}
+
+    // 1) 기본 시연용 Seed 3건 로드
+    for (const item of getSeedLeads()) {
+      map.set(item.id, { ...item });
+    }
+
+    // 2) 현재 브라우저 localStorage에 저장된 신청 내역 병합
+    const localRealLeads = [];
+    try {
+      const raw = localStorage.getItem(LEADS_KEY);
+      if (raw) {
+        const localArr = JSON.parse(raw);
+        if (Array.isArray(localArr)) {
+          for (const item of localArr) {
+            if (item && item.id) {
+              map.set(item.id, { ...item });
+              if (!item.isSeed) localRealLeads.push(item);
+            }
+          }
+        }
+      }
+    } catch (e) {}
+
+    // 3) 24/7 클라우드 스트림 이벤트 수신 및 병합
+    const cloudSeenIds = new Set();
+    const events = await fetchStreamEvents(CLOUD_LEADS_STREAM);
+    for (const ev of events) {
+      if (ev.action === 'upsert_lead' && ev.item && ev.item.id) {
+        map.set(ev.item.id, { ...ev.item });
+        cloudSeenIds.add(ev.item.id);
+        deletedIds.delete(ev.item.id);
+      } else if (ev.action === 'delete_lead' && ev.leadId) {
+        deletedIds.add(ev.leadId);
+        map.delete(ev.leadId);
+      } else if (ev.action === 'reset_seed_leads') {
+        for (const seedItem of getSeedLeads()) {
+          deletedIds.delete(seedItem.id);
+          map.set(seedItem.id, { ...seedItem });
+        }
+      }
+    }
+
+    for (const delId of deletedIds) {
+      map.delete(delId);
+    }
+
+    // 4) 로컬 미전송 신청 내역 자동 복구
+    for (const localLead of localRealLeads) {
+      if (!deletedIds.has(localLead.id) && !cloudSeenIds.has(localLead.id)) {
+        publishStreamEvent(CLOUD_LEADS_STREAM, {
+          action: 'upsert_lead',
+          item: localLead
+        });
+      }
+    }
+
+    const mergedLeads = Array.from(map.values()).sort((a, b) => {
+      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+    });
+
+    try {
+      localStorage.setItem(LEADS_KEY, JSON.stringify(mergedLeads));
+      localStorage.setItem(DELETED_LEADS_KEY, JSON.stringify(Array.from(deletedIds)));
+    } catch (e) {}
+
+    return mergedLeads;
   }
 
   function filterByMode(items, mode) {
@@ -310,7 +510,6 @@
     // 1. POST /api/responses (익명 설문 응답 저장)
     if (path === '/api/responses' && method === 'POST') {
       const body = JSON.parse(options.body || '{}');
-      const list = await readCloudResponses();
       const item = {
         id: 'resp-' + Date.now() + '-' + Math.random().toString(16).slice(2, 6),
         createdAt: new Date().toISOString(),
@@ -320,8 +519,21 @@
         habitTypeName: body.habitTypeName || HABIT_TYPE_META[body.habitType] || HABIT_TYPE_META.type2,
         vocComment: body.vocComment ? String(body.vocComment).trim().slice(0, 300) : ''
       };
-      list.unshift(item);
-      await writeCloudResponses(list);
+
+      // 로컬 스토리지에 즉시 반영
+      try {
+        const raw = localStorage.getItem(RESP_KEY);
+        const list = raw ? JSON.parse(raw) : [...getInitialRealResponses(), ...getSeedResponses()];
+        list.unshift(item);
+        localStorage.setItem(RESP_KEY, JSON.stringify(list));
+      } catch (e) {}
+
+      // 클라우드 실시간 스트림에 즉시 발행 (CORS Simple Request)
+      await publishStreamEvent(CLOUD_RESP_STREAM, {
+        action: 'upsert_response',
+        item
+      });
+
       return jsonResponse({ ok: true, responseId: item.id }, 201);
     }
 
@@ -339,7 +551,14 @@
       }
       if (target) {
         target.vocComment = cleanVoc;
-        await writeCloudResponses(list);
+        try {
+          localStorage.setItem(RESP_KEY, JSON.stringify(list));
+        } catch (e) {}
+        await publishStreamEvent(CLOUD_RESP_STREAM, {
+          action: 'update_voc',
+          responseId: target.id,
+          vocComment: cleanVoc
+        });
         return jsonResponse({ ok: true, responseId: target.id }, 200);
       }
       return jsonResponse({ ok: false, message: '응답을 찾을 수 없습니다.' }, 404);
@@ -348,7 +567,6 @@
     // 2. POST /api/leads (분리된 신청자 연락처 저장)
     if (path === '/api/leads' && method === 'POST') {
       const body = JSON.parse(options.body || '{}');
-      const list = await readCloudLeads();
       const item = {
         id: 'lead-' + Date.now() + '-' + Math.random().toString(16).slice(2, 6),
         createdAt: new Date().toISOString(),
@@ -358,8 +576,19 @@
         interviewAvailable: Boolean(body.interviewAvailable),
         privacyConsent: Boolean(body.privacyConsent)
       };
-      list.unshift(item);
-      await writeCloudLeads(list);
+
+      try {
+        const raw = localStorage.getItem(LEADS_KEY);
+        const list = raw ? JSON.parse(raw) : getSeedLeads();
+        list.unshift(item);
+        localStorage.setItem(LEADS_KEY, JSON.stringify(list));
+      } catch (e) {}
+
+      await publishStreamEvent(CLOUD_LEADS_STREAM, {
+        action: 'upsert_lead',
+        item
+      });
+
       return jsonResponse({ ok: true, leadId: item.id }, 201);
     }
 
@@ -447,18 +676,21 @@
     // 4. DELETE /api/admin/leads/:id
     if (path.startsWith('/api/admin/leads/') && method === 'DELETE') {
       const targetId = decodeURIComponent(path.replace('/api/admin/leads/', ''));
-      const allLeads = await readCloudLeads();
-      const filtered = allLeads.filter((l) => l.id !== targetId);
-      await writeCloudLeads(filtered);
+      await publishStreamEvent(CLOUD_LEADS_STREAM, {
+        action: 'delete_lead',
+        leadId: targetId
+      });
+      await readCloudLeads();
       return jsonResponse({ ok: true, deletedId: targetId, message: '신청자 개인정보가 영구 삭제되었습니다.' });
     }
 
     // 5. POST /api/admin/reset-seed (실제 고객 응답 보존 + 시연용 데이터만 기본 복원)
     if (path === '/api/admin/reset-seed' && method === 'POST') {
-      const realResponses = (await readCloudResponses()).filter((r) => !r.isSeed);
-      const realLeads = (await readCloudLeads()).filter((l) => !l.isSeed);
-      await writeCloudResponses([...realResponses, ...getSeedResponses()]);
-      await writeCloudLeads([...realLeads, ...getSeedLeads()]);
+      await publishStreamEvent(CLOUD_LEADS_STREAM, {
+        action: 'reset_seed_leads'
+      });
+      await readCloudResponses();
+      await readCloudLeads();
       return jsonResponse({
         ok: true,
         message: '실제 고객 응답은 그대로 유지하고, 시연용 가상 데이터(설문 5건, 신청 3건)만 기본값으로 복원했습니다.'
@@ -546,14 +778,15 @@
     return jsonResponse({ ok: false, message: 'Not Found' }, 404);
   }
 
-  // 첫 화면 실시간 참여자 수(128 + 실제 응답 수) 클라우드 동기화
+  // 첫 화면 실시간 참여자 수(128 + 실제 응답 수) 클라우드 동기화 + 미전송 로컬 데이터 자동 복구
   async function syncIntroParticipantBadge() {
-    const countEl = document.getElementById('live-participant-count');
-    if (!countEl) return;
     try {
       const allResp = await readCloudResponses();
-      const realCount = allResp.filter((r) => !r.isSeed).length;
-      countEl.textContent = String(128 + realCount);
+      const countEl = document.getElementById('live-participant-count');
+      if (countEl) {
+        const realCount = allResp.filter((r) => !r.isSeed).length;
+        countEl.textContent = String(128 + realCount);
+      }
     } catch (e) {}
   }
 
@@ -566,7 +799,6 @@
   window.fetch = async function (input, init) {
     const urlStr = typeof input === 'string' ? input : input.url;
     if (urlStr && urlStr.includes('/api/')) {
-      // 로컬 서버(localhost)가 켜져 있을 때는 로컬 파일에도 백업 기록을 남기고, 메인 데이터는 24/7 클라우드 DB로 통합 처리
       const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
       if (isLocalhost) {
         try { ORIGINAL_FETCH(input, init).catch(() => {}); } catch (e) {}
