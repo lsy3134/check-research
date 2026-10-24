@@ -1,5 +1,107 @@
 [
   {
+    "id": "resp-1792804222155-f191",
+    "createdAt": "2026-10-24T01:10:22.155Z",
+    "isSeed": false,
+    "answers": {
+      "Q1": "exp_forgot_question",
+      "Q2": "store_kakao",
+      "Q3": "recheck_search",
+      "Q4": "share_group_chat",
+      "Q5": "feat_calendar",
+      "Q6": "freq_1_2",
+      "Q7": "age_30s"
+    },
+    "habitType": "type2",
+    "habitTypeName": "사진첩·단톡방 스크롤 탐정형",
+    "vocComment": "진료 후 사후관리 차원에서 날짜별로 기록한 것에 보험 청구 여부를 체크&기록할 수 있으면 좋을 거 같아요! 다니는 병원이 많아질 수록 청구했는지 헷갈리는경우가 많아요."
+  },
+  {
+    "id": "resp-1792803101556-9399",
+    "createdAt": "2026-10-24T00:51:41.556Z",
+    "isSeed": false,
+    "answers": {
+      "Q1": "exp_forgot_question",
+      "Q2": "store_none",
+      "Q3": "recheck_none",
+      "Q4": "share_group_chat",
+      "Q5": "feat_calendar",
+      "Q6": "freq_3_4",
+      "Q7": "age_30s"
+    },
+    "habitType": "type1",
+    "habitTypeName": "마음만은 든든, 기억·대화 중심 확인형",
+    "vocComment": ""
+  },
+  {
+    "id": "resp-1792801758771-33bd",
+    "createdAt": "2026-10-24T00:29:18.771Z",
+    "isSeed": false,
+    "answers": {
+      "Q1": "exp_multi_meds",
+      "Q2": "store_kakao",
+      "Q3": "recheck_med_list",
+      "Q4": "share_group_chat",
+      "Q5": "feat_med_list",
+      "Q6": "freq_zero",
+      "Q7": "age_30s"
+    },
+    "habitType": "type2",
+    "habitTypeName": "사진첩·단톡방 스크롤 탐정형",
+    "vocComment": ""
+  },
+  {
+    "id": "resp-1792798982421-4f8c",
+    "createdAt": "2026-10-23T23:43:02.422Z",
+    "isSeed": false,
+    "answers": {
+      "Q1": "exp_none_yet",
+      "Q2": "store_none",
+      "Q3": "recheck_search",
+      "Q4": "share_group_chat",
+      "Q5": "feat_calendar",
+      "Q6": "freq_1_2",
+      "Q7": "age_30s"
+    },
+    "habitType": "type1",
+    "habitTypeName": "마음만은 든든, 기억·대화 중심 확인형",
+    "vocComment": ""
+  },
+  {
+    "id": "resp-1792797779909-9d20",
+    "createdAt": "2026-10-23T23:22:59.909Z",
+    "isSeed": false,
+    "answers": {
+      "Q1": "exp_hard_answer",
+      "Q2": "store_kakao",
+      "Q3": "recheck_search",
+      "Q4": "share_group_chat",
+      "Q5": "feat_calendar",
+      "Q6": "freq_no_help",
+      "Q7": "age_30s"
+    },
+    "habitType": "type2",
+    "habitTypeName": "사진첩·단톡방 스크롤 탐정형",
+    "vocComment": ""
+  },
+  {
+    "id": "resp-1792797330050-edd5",
+    "createdAt": "2026-10-23T23:15:30.050Z",
+    "isSeed": false,
+    "answers": {
+      "Q1": "exp_no_issue",
+      "Q2": "store_none",
+      "Q3": "recheck_search",
+      "Q4": "share_none_exp",
+      "Q5": "feat_selective_share",
+      "Q6": "freq_zero",
+      "Q7": "age_30s"
+    },
+    "habitType": "type1",
+    "habitTypeName": "마음만은 든든, 기억·대화 중심 확인형",
+    "vocComment": ""
+  },
+  {
     "id": "resp-1792752790662-1d04",
     "createdAt": "2026-10-23T10:53:10.665Z",
     "isSeed": false,
