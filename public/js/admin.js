@@ -44,6 +44,7 @@
   const btnResetSeed = document.getElementById('btn-reset-seed');
   const btnLogout = document.getElementById('btn-logout');
   const btnExportResponses = document.getElementById('btn-export-responses');
+  const btnExportPdf = document.getElementById('btn-export-pdf');
   const btnExportLeads = document.getElementById('btn-export-leads');
 
   let currentPassword = sessionStorage.getItem(SESSION_KEY) || '';
@@ -480,8 +481,8 @@
       a.href = downloadUrl;
       const dateStr = new Date().toISOString().slice(0, 10);
       a.download = type === 'leads'
-        ? `check_test_leads_${currentFilter}_${dateStr}.csv`
-        : `check_survey_responses_${currentFilter}_${dateStr}.csv`;
+        ? `Check_초기테스트신청자_${currentFilter}_${dateStr}.csv`
+        : `Check_수요조사_엑셀정리본_${currentFilter}_${dateStr}.csv`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -493,6 +494,18 @@
 
   btnExportResponses.addEventListener('click', () => downloadCsv('responses'));
   btnExportLeads.addEventListener('click', () => downloadCsv('leads'));
+
+  if (btnExportPdf) {
+    btnExportPdf.addEventListener('click', () => {
+      const origTitle = document.title;
+      const dateStr = new Date().toISOString().slice(0, 10);
+      document.title = `Check_수요조사_대시보드리포트_${currentFilter}_${dateStr}`;
+      window.print();
+      setTimeout(() => {
+        document.title = origTitle;
+      }, 1000);
+    });
+  }
 
   // ==================== 바이럴 확산 키트 (템플릿 3종 원클릭 복사 & QR코드 저장) ====================
   async function copyToClipboard(text) {

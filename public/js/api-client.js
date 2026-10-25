@@ -1,18 +1,18 @@
 /* =========================================================
    Check 24/7 클라우드 통합 API 어댑터 (api-client.js)
    - PC가 꺼져 있어도 365일 24시간 모든 스마트폰·PC의 응답을 한곳으로 실시간 수집
-   - ntfy.sh 스트림 조회 시 ?t=(title 필터) 파라미터를 제거하고 cache: 'no-store' 적용해 100% 실시간 수신 보장
+   - 엑셀(CSV) 종합 정리본(핵심 KPI + 유형별 분포 + Q1~Q7 문항별 비율 + 응답 원본) 다운로드 지원
    - 시연용(Seed) 전체 삭제 / 개별 삭제(설문·리드) 즉시 반영 및 영구 유지 지원
    ========================================================= */
 (function () {
   const ORIGINAL_FETCH = window.fetch.bind(window);
   const CLOUD_RESP_STREAM = 'https://ntfy.sh/check_survey_clean_2026_v5';
   const CLOUD_LEADS_STREAM = 'https://ntfy.sh/check_leads_clean_2026_v5';
-  const RESP_KEY = 'check_responses_v7_clean';
-  const LEGACY_RESP_KEYS = ['check_responses_v5_clean', 'check_responses_v2'];
-  const LEADS_KEY = 'check_leads_v7_clean';
-  const LEGACY_LEADS_KEYS = ['check_leads_v5_clean', 'check_leads_v2'];
-  const SYNCED_IDS_KEY = 'check_synced_ids_v7';
+  const RESP_KEY = 'check_responses_v8_clean';
+  const LEGACY_RESP_KEYS = ['check_responses_v7_clean', 'check_responses_v5_clean', 'check_responses_v2'];
+  const LEADS_KEY = 'check_leads_v8_clean';
+  const LEGACY_LEADS_KEYS = ['check_leads_v7_clean', 'check_leads_v5_clean', 'check_leads_v2'];
+  const SYNCED_IDS_KEY = 'check_synced_ids_v8';
   const DELETED_RESPS_KEY = 'check_deleted_resps_v6';
   const DELETED_LEADS_KEY = 'check_deleted_leads_v6';
   const ADMIN_PW = 'check2026!';
@@ -24,9 +24,60 @@
     type4: '체계적인 스마트 동행 기록 프로형'
   };
 
-  // 현재까지 수집 완료된 실제 고객 응답 10건 영구 보존
+  // 현재까지 수집 완료된 실제 고객 응답 13건 영구 보존
   function getInitialRealResponses() {
     return [
+      {
+        id: 'resp-1792879388891-15f3',
+        createdAt: '2026-10-24T22:03:08.891Z',
+        isSeed: false,
+        answers: {
+          Q1: 'exp_no_issue',
+          Q2: 'store_none',
+          Q3: 'recheck_search',
+          Q4: 'share_selected_family',
+          Q5: 'feat_calendar',
+          Q6: 'freq_1_2',
+          Q7: 'age_40s'
+        },
+        habitType: 'type1',
+        habitTypeName: HABIT_TYPE_META.type1,
+        vocComment: ''
+      },
+      {
+        id: 'resp-1792879301285-83ea',
+        createdAt: '2026-10-24T22:01:41.285Z',
+        isSeed: false,
+        answers: {
+          Q1: 'exp_multi_meds',
+          Q2: 'store_none',
+          Q3: 'recheck_none',
+          Q4: 'share_selected_family',
+          Q5: 'feat_calendar',
+          Q6: 'freq_1_2',
+          Q7: 'age_40s'
+        },
+        habitType: 'type1',
+        habitTypeName: HABIT_TYPE_META.type1,
+        vocComment: ''
+      },
+      {
+        id: 'resp-1792879255533-23cc',
+        createdAt: '2026-10-24T22:00:55.533Z',
+        isSeed: false,
+        answers: {
+          Q1: 'exp_none_yet',
+          Q2: 'store_none',
+          Q3: 'recheck_none',
+          Q4: 'share_selected_family',
+          Q5: 'feat_calendar',
+          Q6: 'freq_no_help',
+          Q7: 'age_40s'
+        },
+        habitType: 'type1',
+        habitTypeName: HABIT_TYPE_META.type1,
+        vocComment: ''
+      },
       {
         id: 'resp-1792804222155-f191',
         createdAt: '2026-10-24T01:10:22.155Z',
@@ -438,7 +489,6 @@
     saveIdSetToStorage(SYNCED_IDS_KEY, set);
   }
 
-  // 클라우드 스트림에 단건 이벤트 발행
   async function publishStreamEvent(streamUrl, payloadObj) {
     try {
       const safeBody = 'ENC:' + encodeURIComponent(JSON.stringify(payloadObj));
@@ -452,7 +502,6 @@
     }
   }
 
-  // 클라우드 스트림에서 전체 이벤트 로그 조회 (주의: ntfy.sh에서 ?t=는 title 필터이므로 절대 붙이지 않음!)
   async function fetchStreamEvents(streamUrl) {
     const events = [];
     try {
@@ -532,22 +581,18 @@
     } catch (e) {}
   }
 
-  // 24/7 클라우드 DB 조회 및 스마트 병합 (익명 응답용)
   async function readCloudResponses() {
     const map = new Map();
     const deletedIds = getIdSetFromStorage(DELETED_RESPS_KEY);
 
-    // 1) 기본 실제 응답 10건 + 시연용 Seed 5건 먼저 배치
     for (const item of [...getInitialRealResponses(), ...getSeedResponses()]) {
       map.set(item.id, { ...item });
     }
 
-    // 2) 로컬에 저장된 신규 사용자 응답 병합
     for (const item of extractCleanCustomResponsesFromStorage(deletedIds)) {
       map.set(item.id, item);
     }
 
-    // 3) 24/7 클라우드 스트림 이벤트 수신 및 병합
     const events = await fetchStreamEvents(CLOUD_RESP_STREAM);
     for (const ev of events) {
       if (ev.action === 'upsert_response' && ev.item && ev.item.id) {
@@ -583,7 +628,6 @@
       }
     }
 
-    // 삭제 목록에 있는 ID 최종 제거
     for (const delId of deletedIds) {
       map.delete(delId);
     }
@@ -601,17 +645,14 @@
     return mergedList;
   }
 
-  // 24/7 클라우드 DB 조회 및 스마트 병합 (분리된 신청자 연락처용)
   async function readCloudLeads() {
     const map = new Map();
     const deletedIds = getIdSetFromStorage(DELETED_LEADS_KEY);
 
-    // 1) 기본 시연용 Seed 3건 배치
     for (const item of getSeedLeads()) {
       map.set(item.id, { ...item });
     }
 
-    // 2) 로컬에 저장된 신규 신청자 병합
     for (const key of [LEADS_KEY, ...LEGACY_LEADS_KEYS]) {
       try {
         const raw = localStorage.getItem(key);
@@ -628,7 +669,6 @@
       } catch (e) {}
     }
 
-    // 3) 24/7 클라우드 스트림 이벤트 수신 및 병합
     const events = await fetchStreamEvents(CLOUD_LEADS_STREAM);
     for (const ev of events) {
       if (ev.action === 'upsert_lead' && ev.item && ev.item.id) {
@@ -650,7 +690,6 @@
       }
     }
 
-    // 삭제 목록에 있는 ID 최종 제거
     for (const delId of deletedIds) {
       map.delete(delId);
     }
@@ -702,7 +741,7 @@
     const headers = options.headers || {};
     const pw = headers['x-admin-password'] || headers['X-Admin-Password'] || '';
 
-    // 1. POST /api/responses (익명 설문 응답 저장)
+    // 1. POST /api/responses
     if (path === '/api/responses' && method === 'POST') {
       const body = JSON.parse(options.body || '{}');
       const hType = body.habitType && HABIT_TYPE_META[body.habitType] ? body.habitType : 'type2';
@@ -731,7 +770,7 @@
 
       const countEl = document.getElementById('live-participant-count');
       if (countEl) {
-        const cur = parseInt(countEl.textContent, 10) || 138;
+        const cur = parseInt(countEl.textContent, 10) || 141;
         countEl.textContent = String(cur + 1);
       }
 
@@ -941,7 +980,7 @@
       });
     }
 
-    // 6. GET /api/admin/export-csv
+    // 6. GET /api/admin/export-csv (엑셀에서 열었을 때 KPI + 문항별 비율 요약 + 전체 응답 원본이 한눈에 정리되도록 구성)
     if (path === '/api/admin/export-csv' && method === 'GET') {
       const exportType = u.searchParams.get('type') || 'responses';
       const filterMode = u.searchParams.get('filter') || 'all';
@@ -971,6 +1010,47 @@
         });
       } else {
         const responses = filterByMode(await readCloudResponses(), filterMode);
+        const leads = filterByMode(await readCloudLeads(), filterMode);
+        const totalResponses = responses.length;
+        const totalLeads = leads.length;
+        const repeatCheckCount = responses.filter(
+          (r) => r.answers && ['freq_5_plus', 'freq_3_4', 'freq_1_2'].includes(r.answers.Q6)
+        ).length;
+        const repeatRate = totalResponses > 0 ? Number(((repeatCheckCount / totalResponses) * 100).toFixed(1)) : 0;
+
+        // 파트 1: 핵심 KPI 요약
+        csvRows.push(['[1. Check 수요조사 핵심 요약 지표 (KPI)]', '', '', ''].map(escapeCsvCell).join(','));
+        csvRows.push(['항목', '수치', '비고', '출력일시: ' + formatKST(new Date().toISOString())].map(escapeCsvCell).join(','));
+        csvRows.push(['익명 설문 응답 수', `${totalResponses}명`, `필터 기준: ${filterMode.toUpperCase()}`, ''].map(escapeCsvCell).join(','));
+        csvRows.push(['초기 테스트 신청자 수', `${totalLeads}명`, '익명 통계와 물리적 분리 보관', ''].map(escapeCsvCell).join(','));
+        csvRows.push(['최근 6개월 기록 재확인 경험 비율(Q6)', `${repeatRate}% (${repeatCheckCount}명)`, '1회 이상 다시 찾아본 응답자 비율', ''].map(escapeCsvCell).join(','));
+        csvRows.push(['', '', '', ''].map(escapeCsvCell).join(','));
+
+        // 파트 2: 4가지 습관 유형 분포
+        csvRows.push(['[2. 부모님 건강기록 관리 습관 유형 분포]', '', '', ''].map(escapeCsvCell).join(','));
+        csvRows.push(['유형 코드', '습관 유형 명칭', '응답 수(명)', '비율(%)'].map(escapeCsvCell).join(','));
+        Object.keys(HABIT_TYPE_META).forEach((tKey) => {
+          const cnt = responses.filter((r) => r.habitType === tKey).length;
+          const pct = totalResponses > 0 ? Number(((cnt / totalResponses) * 100).toFixed(1)) : 0;
+          csvRows.push([tKey, HABIT_TYPE_META[tKey], `${cnt}명`, `${pct}%`].map(escapeCsvCell).join(','));
+        });
+        csvRows.push(['', '', '', ''].map(escapeCsvCell).join(','));
+
+        // 파트 3: Q1~Q7 문항별 & 연령대별 응답 통계 요약
+        csvRows.push(['[3. Q1 ~ Q7 문항별 및 연령대별 응답 통계 요약]', '', '', ''].map(escapeCsvCell).join(','));
+        csvRows.push(['문항 구분', '선택지 내용', '응답 수(명)', '비율(%)'].map(escapeCsvCell).join(','));
+        Object.keys(QUESTION_META).forEach((qKey) => {
+          const meta = QUESTION_META[qKey];
+          Object.keys(meta.options).forEach((optKey) => {
+            const cnt = responses.filter((r) => r.answers?.[qKey] === optKey).length;
+            const pct = totalResponses > 0 ? Number(((cnt / totalResponses) * 100).toFixed(1)) : 0;
+            csvRows.push([meta.title, meta.options[optKey], `${cnt}명`, `${pct}%`].map(escapeCsvCell).join(','));
+          });
+        });
+        csvRows.push(['', '', '', ''].map(escapeCsvCell).join(','));
+
+        // 파트 4: 개별 응답 상세 원본 목록
+        csvRows.push(['[4. 전체 설문 응답 상세 내역 및 1줄 VOC 원본]', '', '', ''].map(escapeCsvCell).join(','));
         csvRows.push(
           [
             '응답ID',
@@ -1025,7 +1105,7 @@
   async function initClient() {
     const countEl = document.getElementById('live-participant-count');
     if (countEl) {
-      countEl.textContent = '138';
+      countEl.textContent = '141';
     }
     await recoverUnsyncedLocalItemsOnce();
   }

@@ -703,6 +703,44 @@
       flex-direction: column;
       gap: 6px;
     }
+
+    /* ==================== PDF 리포트 저장 / 인쇄 전용 스타일 ==================== */
+    @media print {
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      body {
+        background: #FFFFFF !important;
+      }
+      .admin-container {
+        max-width: 100% !important;
+        padding: 0 !important;
+      }
+      .admin-header-actions,
+      .filter-toggle-bar,
+      .csv-export-bar,
+      #viral-kit-panel,
+      .btn-delete-row,
+      .admin-table th:last-child,
+      .admin-table td:last-child {
+        display: none !important;
+      }
+      .panel {
+        break-inside: avoid;
+        box-shadow: none !important;
+        border: 1px solid #CBD5E1 !important;
+        margin-bottom: 16px !important;
+        padding: 16px !important;
+      }
+      .table-responsive {
+        overflow: visible !important;
+      }
+      .admin-table {
+        min-width: 100% !important;
+        font-size: 0.75rem !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -791,24 +829,27 @@
       </div>
     </section>
 
-    <!-- 2. 엑셀(CSV) 다운로드 바 (UTF-8 BOM 한글 완벽 호환 + 현재 필터 반영) -->
+    <!-- 2. 엑셀(CSV) 및 PDF 리포트 다운로드 바 (UTF-8 BOM 한글 완벽 호환 + 현재 필터 반영) -->
     <section class="csv-export-bar">
       <div class="csv-info">
-        <h2>📥 분리 보관 데이터 엑셀(CSV) 다운로드 (UTF-8 BOM 적용)</h2>
-        <p>현재 선택된 필터(전체 / 실제 응답 Real / 시연용 Seed) 기준으로 익명 설문 통계와 신청자 명단을 각각 다운로드합니다.</p>
+        <h2>📥 설문 결과 엑셀(CSV) 종합 정리본 & PDF 리포트 다운로드</h2>
+        <p>현재 선택된 필터(전체 / 실제 응답 Real / 시연용 Seed) 기준으로 통계 요약·응답 내역 엑셀 파일 또는 PDF 리포트로 저장합니다.</p>
       </div>
       <div class="csv-buttons">
         <button type="button" id="btn-export-responses" class="btn-csv">
-          📊 익명 설문 응답 통계 CSV 다운로드
+          📊 엑셀(CSV) 종합 정리본 다운로드 (통계요약+응답내역)
+        </button>
+        <button type="button" id="btn-export-pdf" class="btn-csv" style="background:#F0FDFA; color:#0F766E; border:1.5px solid #99F6E4;">
+          📄 대시보드 PDF 리포트 저장 (인쇄)
         </button>
         <button type="button" id="btn-export-leads" class="btn-csv leads-btn">
-          📇 초기 테스트 신청자 연락처 명단 CSV 다운로드
+          📇 초기 테스트 신청자 명단 엑셀(CSV)
         </button>
       </div>
     </section>
 
     <!-- 2-B. 홍보용 스레드·맘카페 게시물 복사 키트 & 모바일 시연 QR코드 -->
-    <section class="panel">
+    <section class="panel" id="viral-kit-panel">
       <div class="panel-header">
         <h2 class="panel-title">📣 바이럴 확산 키트 · 홍보 문구 템플릿 3종 & 설문 접속 QR코드</h2>
         <span class="panel-badge">스레드 · 인스타그램 · 지역 맘카페 · 단톡방 즉시 배포용</span>
@@ -979,7 +1020,7 @@ https://check-research.surge.sh</textarea>
     </section>
   </div>
 
-  <script src="/js/api-client.js?v=20261024_v7"></script>
-  <script src="/js/admin.js?v=20261024_v7"></script>
+  <script src="/js/api-client.js?v=20261025_v8"></script>
+  <script src="/js/admin.js?v=20261025_v8"></script>
 </body>
 </html>
