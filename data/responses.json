@@ -1,5 +1,22 @@
 [
   {
+    "id": "resp-1792994065727-4b9b",
+    "createdAt": "2026-10-26T05:54:25.727Z",
+    "isSeed": false,
+    "answers": {
+      "Q1": "exp_forgot_question",
+      "Q2": "store_none",
+      "Q3": "recheck_ask_family",
+      "Q4": "share_selected_family",
+      "Q5": "feat_calendar",
+      "Q6": "freq_1_2",
+      "Q7": "age_40s"
+    },
+    "habitType": "type1",
+    "habitTypeName": "마음만은 든든, 기억·대화 중심 확인형",
+    "vocComment": ""
+  },
+  {
     "id": "resp-1792879388891-15f3",
     "createdAt": "2026-10-24T22:03:08.891Z",
     "isSeed": false,
