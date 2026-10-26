@@ -4,16 +4,16 @@
     "createdAt": "2026-10-26T05:54:25.727Z",
     "isSeed": false,
     "answers": {
-      "Q1": "exp_forgot_question",
-      "Q2": "store_none",
-      "Q3": "recheck_ask_family",
-      "Q4": "share_selected_family",
-      "Q5": "feat_calendar",
+      "Q1": "exp_no_issue",
+      "Q2": "store_app_folder",
+      "Q3": "recheck_search",
+      "Q4": "share_none_exp",
+      "Q5": "feat_med_list",
       "Q6": "freq_1_2",
-      "Q7": "age_40s"
+      "Q7": "age_30s"
     },
-    "habitType": "type1",
-    "habitTypeName": "마음만은 든든, 기억·대화 중심 확인형",
+    "habitType": "type4",
+    "habitTypeName": "체계적인 스마트 동행 기록 프로형",
     "vocComment": ""
   },
   {

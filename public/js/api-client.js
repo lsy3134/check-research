@@ -845,6 +845,7 @@
       map.set(item.id, { ...item });
     }
 
+    const localCustomLeads = [];
     for (const key of [LEADS_KEY, ...LEGACY_LEADS_KEYS]) {
       try {
         const raw = localStorage.getItem(key);
@@ -854,6 +855,7 @@
             for (const item of localArr) {
               if (item && item.id && !item.isSeed && !isGarbledText(item.nickname) && !deletedIds.has(item.id)) {
                 map.set(item.id, { ...item });
+                localCustomLeads.push({ ...item });
               }
             }
           }
@@ -895,6 +897,18 @@
           deletedIds.delete(seedItem.id);
           map.set(seedItem.id, { ...seedItem });
         }
+      }
+    }
+
+    // 로컬에만 있던 어제 신청자(Leads)도 영구 클라우드에 자동 동기화
+    const permLeadMapNow = getPermMap();
+    for (const lLead of localCustomLeads) {
+      if (!deletedIds.has(lLead.id) && !permLeadMapNow[lLead.id]) {
+        saveItemToPermanentCloud(PERM_LEADS_INDEX_ID, 'check_leads', lLead);
+        publishStreamEvent(CLOUD_LEADS_STREAM, {
+          action: 'upsert_lead',
+          item: lLead
+        });
       }
     }
 
