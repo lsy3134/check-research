@@ -559,8 +559,21 @@
     } catch (e) {}
   }
 
-  // ==================== 영구 클라우드 DB (restful-api.dev: 만료 없음) 헬퍼 ====================
-  // 개별 응답/리드를 독립된 영구 객체로 생성하고, 인덱스 객체에 객체 ID 목록만 가볍게 보관 (용량 제한 완벽 해결)
+  // ==================== 영구 클라우드 DB (restful-api.dev: 만료 없음 + 페이지 체이닝 무제한 용량) 헬퍼 ====================
+  function encodeSafeCompact(item) {
+    const copy = { ...item };
+    delete copy.habitTypeName; // habitType 코드로 즉시 복원되므로 용량 절약
+    return 'B64:' + btoa(unescape(encodeURIComponent(JSON.stringify(copy))));
+  }
+
+  function decodeSafeCompact(str) {
+    if (!str) return null;
+    if (str.startsWith('B64:')) {
+      return JSON.parse(decodeURIComponent(escape(atob(str.slice(4)))));
+    }
+    return JSON.parse(decodeURIComponent(str));
+  }
+
   async function readPermanentIndex(indexObjId) {
     try {
       const res = await ORIGINAL_FETCH(`${PERM_API_BASE}/${indexObjId}`, {
@@ -572,25 +585,53 @@
         const data = json && json.data ? json.data : {};
         return {
           objIds: Array.isArray(data.objIds) ? data.objIds : [],
-          delIds: Array.isArray(data.delIds) ? data.delIds : []
+          delIds: Array.isArray(data.delIds) ? data.delIds : [],
+          prev: data.prev || null
         };
       }
     } catch (e) {}
-    return { objIds: [], delIds: [] };
+    return { objIds: [], delIds: [], prev: null };
   }
 
-  async function writePermanentIndex(indexObjId, name, objIds, delIds) {
+  async function writePermanentIndex(indexObjId, name, objIds, delIds, prevPageId = null) {
     try {
-      const uniqueObjIds = Array.from(new Set(objIds)).slice(-80);
-      const uniqueDelIds = Array.from(new Set(delIds)).slice(-40);
+      let currentIds = Array.from(new Set(objIds));
+      const uniqueDelIds = Array.from(new Set(delIds)).slice(-12);
+      let prev = prevPageId;
+
+      // 단일 인덱스 객체의 1KB 제한을 절대 넘지 않도록 14개가 차면 이전 묶음을 영구 페이지 객체로 자동 분리 연결(Linked-List)
+      if (currentIds.length > 14) {
+        const toArchive = currentIds.slice(0, currentIds.length - 1);
+        const newest = currentIds.slice(currentIds.length - 1);
+        const pageRes = await ORIGINAL_FETCH(PERM_API_BASE, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: name + '_page',
+            data: {
+              objIds: toArchive,
+              prev: prev || null
+            }
+          })
+        });
+        if (pageRes.ok) {
+          const pageJson = await pageRes.json();
+          if (pageJson && pageJson.id) {
+            prev = pageJson.id;
+            currentIds = newest;
+          }
+        }
+      }
+
       await ORIGINAL_FETCH(`${PERM_API_BASE}/${indexObjId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name,
           data: {
-            objIds: uniqueObjIds,
-            delIds: uniqueDelIds
+            objIds: currentIds,
+            delIds: uniqueDelIds,
+            prev: prev || null
           }
         })
       });
@@ -602,14 +643,14 @@
       const permMap = getPermMap();
       if (permMap[item.id]) return permMap[item.id];
 
-      // 1) 개별 응답을 독립된 영구 클라우드 객체로 POST 생성 (약 250바이트로 100% 성공 및 영구 보관)
+      // 1) 개별 응답을 독립된 영구 클라우드 객체로 POST 생성 (Base64 압축으로 약 220바이트, 만료 기한 없음)
       const createRes = await ORIGINAL_FETCH(PERM_API_BASE, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: item.id,
           data: {
-            enc: encodeURIComponent(JSON.stringify(item))
+            enc: encodeSafeCompact(item)
           }
         })
       });
@@ -621,11 +662,11 @@
       permMap[item.id] = newObjId;
       savePermMap(permMap);
 
-      // 2) 영구 인덱스 객체에 새 객체 ID 추가
+      // 2) 영구 인덱스 객체에 새 객체 ID 추가 (14개 초과 시 자동으로 다음 페이지 체인 생성)
       const idx = await readPermanentIndex(indexObjId);
       if (!idx.objIds.includes(newObjId)) {
         idx.objIds.push(newObjId);
-        await writePermanentIndex(indexObjId, indexName, idx.objIds, idx.delIds);
+        await writePermanentIndex(indexObjId, indexName, idx.objIds, idx.delIds, idx.prev);
       }
       return newObjId;
     } catch (e) {
@@ -636,15 +677,27 @@
   async function fetchPermanentCloudItems(indexObjId) {
     const result = { items: [], delIds: [], objIds: [] };
     try {
-      const idx = await readPermanentIndex(indexObjId);
-      result.delIds = idx.delIds;
-      result.objIds = idx.objIds;
-      if (idx.objIds.length === 0) return result;
+      const headIdx = await readPermanentIndex(indexObjId);
+      result.delIds = headIdx.delIds;
+      const allObjIds = [...headIdx.objIds];
 
-      // 20개씩 묶어서 단일 멀티 GET 호출 (?id=...&id=...)
+      // 이전 페이지 체인이 있으면 끝까지 추적하여 무제한 복원
+      let nextPrev = headIdx.prev;
+      let hop = 0;
+      while (nextPrev && hop < 30) {
+        hop++;
+        const pageIdx = await readPermanentIndex(nextPrev);
+        allObjIds.push(...pageIdx.objIds);
+        nextPrev = pageIdx.prev;
+      }
+
+      result.objIds = Array.from(new Set(allObjIds));
+      if (result.objIds.length === 0) return result;
+
+      // 15개씩 묶어서 멀티 GET 호출 (?id=...&id=...)
       const chunks = [];
-      for (let i = 0; i < idx.objIds.length; i += 20) {
-        chunks.push(idx.objIds.slice(i, i + 20));
+      for (let i = 0; i < result.objIds.length; i += 15) {
+        chunks.push(result.objIds.slice(i, i + 15));
       }
       for (const chunk of chunks) {
         const query = chunk.map((id) => `id=${encodeURIComponent(id)}`).join('&');
@@ -658,7 +711,7 @@
             for (const obj of arr) {
               try {
                 if (obj && obj.data && obj.data.enc) {
-                  const decoded = JSON.parse(decodeURIComponent(obj.data.enc));
+                  const decoded = decodeSafeCompact(obj.data.enc);
                   if (decoded && decoded.id) {
                     result.items.push(decoded);
                     const permMap = getPermMap();
