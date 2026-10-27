@@ -495,8 +495,253 @@
     }
   }
 
-  btnExportResponses.addEventListener('click', () => downloadCsv('responses'));
-  btnExportLeads.addEventListener('click', () => downloadCsv('leads'));
+  // ==================== 진짜 엑셀(.xlsx) 스타일 적용 다운로드 (테두리·배경색·열너비 자동맞춤·시트분리) ====================
+  function buildStyledSheetFromAoA(XLSX, aoa, colWidths, headerRowIndices, sectionTitleRowIndices) {
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    ws['!cols'] = colWidths.map((w) => ({ wch: w }));
+
+    const thinBorder = {
+      top: { style: 'thin', color: { rgb: 'CBD5E1' } },
+      bottom: { style: 'thin', color: { rgb: 'CBD5E1' } },
+      left: { style: 'thin', color: { rgb: 'CBD5E1' } },
+      right: { style: 'thin', color: { rgb: 'CBD5E1' } }
+    };
+
+    const headerSet = new Set(headerRowIndices || []);
+    const sectionSet = new Set(sectionTitleRowIndices || []);
+    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:A1');
+
+    for (let R = range.s.r; R <= range.e.r; R++) {
+      for (let C = range.s.c; C <= range.e.c; C++) {
+        const cellAddr = XLSX.utils.encode_cell({ r: R, c: C });
+        const cell = ws[cellAddr];
+        if (!cell) continue;
+
+        if (sectionSet.has(R)) {
+          cell.s = {
+            fill: { fgColor: { rgb: '0F766E' } },
+            font: { name: '맑은 고딕', sz: 11, bold: true, color: { rgb: 'FFFFFF' } },
+            alignment: { vertical: 'center', horizontal: 'left' },
+            border: thinBorder
+          };
+        } else if (headerSet.has(R)) {
+          cell.s = {
+            fill: { fgColor: { rgb: 'CCFBF1' } },
+            font: { name: '맑은 고딕', sz: 10, bold: true, color: { rgb: '0F766E' } },
+            alignment: { vertical: 'center', horizontal: 'center', wrapText: true },
+            border: thinBorder
+          };
+        } else if (cell.v !== '' && cell.v !== null && cell.v !== undefined) {
+          cell.s = {
+            fill: { fgColor: { rgb: R % 2 === 1 ? 'F8FAFC' : 'FFFFFF' } },
+            font: { name: '맑은 고딕', sz: 10, color: { rgb: '0F172A' } },
+            alignment: { vertical: 'center', horizontal: 'left', wrapText: true },
+            border: thinBorder
+          };
+        }
+      }
+    }
+    return ws;
+  }
+
+  function buildResponseRowsAoA(list) {
+    const HABIT_TYPE_LABELS = {
+      type1: '마음만은 든든, 기억·대화 중심 확인형',
+      type2: '사진첩·단톡방 스크롤 탐정형',
+      type3: '수첩·메모장 꼼꼼 기록 매니저형',
+      type4: '체계적인 스마트 동행 기록 프로형'
+    };
+    const header = [
+      '연번',
+      '데이터 구분',
+      '참여 일시 (KST)',
+      '연령대 (Q7)',
+      '건강기록 관리 습관 유형',
+      'Q1. 부모님 건강관리 경험',
+      'Q2. 건강기록 보관 방법',
+      'Q3. 과거 기록 재확인 경험',
+      'Q4. 가족 간 소통·공유 범위',
+      'Q5. 가장 필요한 기능 1순위',
+      'Q6. 최근 6개월 재확인 빈도',
+      '선택형 1줄 자유응답 (익명 VOC)'
+    ];
+    const rows = [header];
+    (list || []).forEach((r, idx) => {
+      const cleanTypeName = HABIT_TYPE_LABELS[r.habitType] || r.habitTypeName || '-';
+      rows.push([
+        idx + 1,
+        r.isSeed ? '시연용 샘플 (Seed)' : '실제 고객 응답 (Real)',
+        formatDateTime(r.createdAt),
+        SHORT_LABELS[r.answers?.Q7] || r.answers?.Q7 || '-',
+        cleanTypeName,
+        SHORT_LABELS[r.answers?.Q1] || r.answers?.Q1 || '-',
+        SHORT_LABELS[r.answers?.Q2] || r.answers?.Q2 || '-',
+        SHORT_LABELS[r.answers?.Q3] || r.answers?.Q3 || '-',
+        SHORT_LABELS[r.answers?.Q4] || r.answers?.Q4 || '-',
+        SHORT_LABELS[r.answers?.Q5] || r.answers?.Q5 || '-',
+        SHORT_LABELS[r.answers?.Q6] || r.answers?.Q6 || '-',
+        r.vocComment && r.vocComment.trim() ? r.vocComment.trim() : '-'
+      ]);
+    });
+    return rows;
+  }
+
+  function buildLeadsRowsAoA(list) {
+    const header = [
+      '연번',
+      '데이터 구분',
+      '신청 일시 (KST)',
+      '닉네임',
+      '연락처 (휴대폰/카톡ID/이메일)',
+      '10분 인터뷰 가능 여부',
+      '개인정보 수집·이용 동의'
+    ];
+    const rows = [header];
+    (list || []).forEach((l, idx) => {
+      rows.push([
+        idx + 1,
+        l.isSeed ? '시연용 샘플 (Seed)' : '실제 신청자 (Real)',
+        formatDateTime(l.createdAt),
+        l.nickname || '-',
+        l.contact || '-',
+        l.interviewAvailable ? '가능 (O)' : '미선택 (X)',
+        l.privacyConsent ? '동의 완료' : '미동의'
+      ]);
+    });
+    return rows;
+  }
+
+  async function downloadExcelFile(type) {
+    if (!lastDashboardData || typeof window.XLSX === 'undefined') {
+      return downloadCsv(type);
+    }
+    try {
+      const XLSX = window.XLSX;
+      const wb = XLSX.utils.book_new();
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const nowStr = formatDateTime(new Date().toISOString());
+      const { kpi, typeStats, questionStats, leads, responses } = lastDashboardData;
+
+      if (type === 'leads') {
+        const leadsAoA = [
+          ['[Check 초기 테스트 & 인터뷰 신청자 명단]', '', '', '', '', '', ''],
+          ...buildLeadsRowsAoA(leads)
+        ];
+        const wsLeads = buildStyledSheetFromAoA(
+          XLSX,
+          leadsAoA,
+          [8, 22, 22, 18, 28, 20, 22],
+          [1],
+          [0]
+        );
+        XLSX.utils.book_append_sheet(wb, wsLeads, '초기테스트_신청자명단');
+        XLSX.writeFile(wb, `Check_초기테스트신청자_${currentFilter}_${dateStr}.xlsx`);
+        return;
+      }
+
+      // 1) 시트 1: 통계 요약 리포트 (핵심 KPI + 유형 분포 + Q1~Q7 문항별 통계)
+      const filterLabel =
+        currentFilter === 'real'
+          ? '실제 고객 응답만 (Real)'
+          : currentFilter === 'seed'
+            ? '시연용 샘플 데이터만 (Seed)'
+            : '전체 보기 (Real + Seed)';
+
+      const summaryAoA = [];
+      const headerRows = [];
+      const sectionRows = [];
+
+      sectionRows.push(summaryAoA.length);
+      summaryAoA.push(['■ [파트 1] Check 수요조사 핵심 요약 지표 (KPI)', '', '', `출력일시: ${nowStr}`]);
+      headerRows.push(summaryAoA.length);
+      summaryAoA.push(['지표 항목', '수치 결과', '산출 기준 / 설명', '현재 필터 모드']);
+      summaryAoA.push(['총 익명 설문 응답 수', `${kpi.totalResponses}명`, 'Q1~Q7 완료 즉시 자동 수집', filterLabel]);
+      summaryAoA.push(['초기 테스트 신청자 수', `${kpi.totalLeads}명`, `설문 대비 신청 전환율 ${kpi.conversionRate}%`, '물리적 분리 보관']);
+      summaryAoA.push(['10분 비대면 인터뷰 가능 인원', `${kpi.interviewAvailableCount}명`, '가상 건강정보 시제품 인터뷰 대상', '']);
+      summaryAoA.push(['최근 6개월 기록 재확인 경험 비율 (Q6)', `${kpi.consentAwareRate}% (${kpi.consentAwareCount}명)`, `전체 ${kpi.totalResponses}명 중 1회 이상 재확인 비율`, '']);
+      summaryAoA.push(['', '', '', '']);
+
+      sectionRows.push(summaryAoA.length);
+      summaryAoA.push(['■ [파트 2] 부모님 건강기록 관리 습관 유형 분포 (4가지 유형)', '', '', '']);
+      headerRows.push(summaryAoA.length);
+      summaryAoA.push(['유형 코드', '습관 유형 명칭 (비진단 안내)', '응답자 수 (명)', '비율 (%)']);
+      (typeStats || []).forEach((t) => {
+        summaryAoA.push([t.typeKey, t.name, `${t.count}명`, `${t.percent}%`]);
+      });
+      summaryAoA.push(['', '', '', '']);
+
+      sectionRows.push(summaryAoA.length);
+      summaryAoA.push(['■ [파트 3] Q1 ~ Q7 문항별 및 연령대별 응답 통계 요약', '', '', '']);
+      headerRows.push(summaryAoA.length);
+      summaryAoA.push(['설문 문항 제목', '선택지 항목 내용', '응답자 수 (명)', '비율 (%)']);
+      Object.keys(questionStats || {}).forEach((qKey) => {
+        const qObj = questionStats[qKey];
+        if (!qObj || !Array.isArray(qObj.options)) return;
+        qObj.options.forEach((opt) => {
+          summaryAoA.push([qObj.title, opt.label, `${opt.count}명`, `${opt.percent}%`]);
+        });
+      });
+
+      const wsSummary = buildStyledSheetFromAoA(
+        XLSX,
+        summaryAoA,
+        [52, 62, 18, 26],
+        headerRows,
+        sectionRows
+      );
+      XLSX.utils.book_append_sheet(wb, wsSummary, '1_통계요약_리포트');
+
+      // 2) 시트 2: 순수 실제 고객 응답(Real) 전용 내역 (시연용 Seed 자동 제외 시트)
+      const realOnlyList = (responses || []).filter((r) => !r.isSeed);
+      const realAoA = [
+        [`■ 실제 고객 설문 응답 전용 내역 (시연용 제외 · 총 ${realOnlyList.length}건)`, '', '', '', '', '', '', '', '', '', '', ''],
+        ...buildResponseRowsAoA(realOnlyList)
+      ];
+      const wsReal = buildStyledSheetFromAoA(
+        XLSX,
+        realAoA,
+        [7, 20, 20, 12, 30, 26, 26, 26, 28, 24, 20, 45],
+        [1],
+        [0]
+      );
+      XLSX.utils.book_append_sheet(wb, wsReal, '2_실제고객응답_내역');
+
+      // 3) 시트 3: 현재 필터 기준 전체 응답 내역
+      const allRespAoA = [
+        [`■ 현재 필터(${filterLabel}) 설문 응답 전체 내역 (총 ${(responses || []).length}건)`, '', '', '', '', '', '', '', '', '', '', ''],
+        ...buildResponseRowsAoA(responses)
+      ];
+      const wsAllResp = buildStyledSheetFromAoA(
+        XLSX,
+        allRespAoA,
+        [7, 20, 20, 12, 30, 26, 26, 26, 28, 24, 20, 45],
+        [1],
+        [0]
+      );
+      XLSX.utils.book_append_sheet(wb, wsAllResp, '3_전체응답_원본');
+
+      // 4) 시트 4: 초기 테스트 & 인터뷰 신청자 명단
+      const leadsSheetAoA = [
+        [`■ 초기 테스트 & 인터뷰 신청자 명단 (총 ${(leads || []).length}건)`, '', '', '', '', '', ''],
+        ...buildLeadsRowsAoA(leads)
+      ];
+      const wsLeadsSheet = buildStyledSheetFromAoA(
+        XLSX,
+        leadsSheetAoA,
+        [8, 22, 22, 18, 28, 20, 22],
+        [1],
+        [0]
+      );
+      XLSX.utils.book_append_sheet(wb, wsLeadsSheet, '4_초기테스트신청자');
+
+      XLSX.writeFile(wb, `Check_수요조사_엑셀정리본_${currentFilter}_${dateStr}.xlsx`);
+    } catch (e) {
+      downloadCsv(type);
+    }
+  }
+
+  btnExportResponses.addEventListener('click', () => downloadExcelFile('responses'));
+  btnExportLeads.addEventListener('click', () => downloadExcelFile('leads'));
 
   // 1) PDF 파일 직접 다운로드 (A4 전용 페이지별 분할 렌더링으로 좌우·상하 잘림 0% 보장)
   function buildPdfQuestionCardHtml(qKey, qData) {
