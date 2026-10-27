@@ -50,6 +50,7 @@
 
   let currentPassword = sessionStorage.getItem(SESSION_KEY) || '';
   let currentFilter = 'all'; // 'all' | 'real' | 'seed'
+  let lastDashboardData = null;
 
   const SHORT_LABELS = {
     share_group_chat: '가족 전체 단톡방에서 공유해요',
@@ -159,6 +160,7 @@
   }
 
   function renderDashboard(data) {
+    lastDashboardData = data;
     const { kpi, countsSummary, typeStats, questionStats, leads, responses } = data;
 
     // 상단 필터 탭 카운트 업데이트
@@ -496,47 +498,315 @@
   btnExportResponses.addEventListener('click', () => downloadCsv('responses'));
   btnExportLeads.addEventListener('click', () => downloadCsv('leads'));
 
-  // 1) PDF 파일 직접 다운로드 (인쇄 창을 띄우지 않고 즉시 .pdf 파일로 생성 및 다운로드)
+  // 1) PDF 파일 직접 다운로드 (A4 전용 페이지별 분할 렌더링으로 좌우·상하 잘림 0% 보장)
+  function buildPdfQuestionCardHtml(qKey, qData) {
+    if (!qData) return '';
+    const isHighlight = qKey === 'Q4' || qKey === 'Q5' || qKey === 'Q6';
+    const barColor = isHighlight ? '#EA580C' : '#0D9488';
+    const optsHtml = (qData.options || [])
+      .map(
+        (opt) => `
+        <div style="margin-bottom:7px;">
+          <div style="display:flex; justify-content:space-between; font-size:10.5px; color:#334155; margin-bottom:3px; gap:6px;">
+            <span style="flex:1; word-break:keep-all;">${escapeHtml(opt.label)}</span>
+            <strong style="white-space:nowrap; color:#0F172A;">${opt.count}명 (${opt.percent}%)</strong>
+          </div>
+          <div style="width:100%; height:6px; background:#E2E8F0; border-radius:99px; overflow:hidden;">
+            <div style="width:${opt.percent}%; height:100%; background:${barColor}; border-radius:99px;"></div>
+          </div>
+        </div>
+      `
+      )
+      .join('');
+
+    return `
+      <div style="background:#F8FAFC; border:1px solid #CBD5E1; border-radius:10px; padding:11px 12px;">
+        <div style="font-size:11.5px; font-weight:800; color:#0F172A; margin-bottom:8px; line-height:1.35;">
+          ${escapeHtml(qData.title)}
+        </div>
+        ${optsHtml}
+      </div>
+    `;
+  }
+
+  function createA4SheetContainer() {
+    const page = document.createElement('div');
+    page.style.cssText =
+      'width:794px; background:#FFFFFF; padding:26px 28px; box-sizing:border-box; font-family:Pretendard,-apple-system,sans-serif; color:#0F172A;';
+    return page;
+  }
+
+  async function generateCleanA4Pdf() {
+    if (!lastDashboardData) {
+      alert('대시보드 데이터를 먼저 불러와 주세요.');
+      return;
+    }
+    if (typeof window.html2canvas === 'undefined' || typeof window.jspdf === 'undefined') {
+      alert('PDF 생성 라이브러리를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');
+      return;
+    }
+
+    const origText = btnExportPdf.innerHTML;
+    btnExportPdf.disabled = true;
+    btnExportPdf.innerHTML = '⏳ A4 리포트 생성 중...';
+
+    const { kpi, typeStats, questionStats, leads, responses } = lastDashboardData;
+    const filterName =
+      currentFilter === 'real'
+        ? '실제 고객 응답만 (Real)'
+        : currentFilter === 'seed'
+          ? '시연용 가상 데이터만 (Seed)'
+          : '전체 데이터 (Real + Seed)';
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const nowFormatted = formatDateTime(new Date().toISOString());
+
+    const stage = document.createElement('div');
+    stage.style.cssText = 'position:absolute; left:0; top:0; width:794px; background:#FFFFFF; z-index:-9999; pointer-events:none;';
+    document.body.appendChild(stage);
+
+    const pages = [];
+
+    try {
+      // ==================== [페이지 1] 요약 KPI + 유형 분포 + Q1~Q4 ====================
+      const page1 = createA4SheetContainer();
+      const typeBoxesHtml = (typeStats || [])
+        .map(
+          (t) => `
+          <div style="background:#F8FAFC; border:1px solid #CBD5E1; border-radius:8px; padding:9px 11px;">
+            <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:700; margin-bottom:5px;">
+              <span>${escapeHtml(t.name)}</span>
+              <span style="color:#0F766E;">${t.count}명 (${t.percent}%)</span>
+            </div>
+            <div style="width:100%; height:7px; background:#E2E8F0; border-radius:99px; overflow:hidden;">
+              <div style="width:${t.percent}%; height:100%; background:#0D9488; border-radius:99px;"></div>
+            </div>
+          </div>
+        `
+        )
+        .join('');
+
+      page1.innerHTML = `
+        <div style="border-bottom:2px solid #0F766E; padding-bottom:10px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:flex-end;">
+          <div>
+            <div style="font-size:11px; font-weight:800; color:#0F766E; margin-bottom:2px;">CHECK DEMAND RESEARCH REPORT</div>
+            <h1 style="font-size:18px; font-weight:900; color:#0F172A; margin:0;">🌿 Check 수요조사 & 초기 테스트 신청 종합 리포트</h1>
+          </div>
+          <div style="text-align:right; font-size:10.5px; color:#475569;">
+            <div><strong>필터 기준:</strong> ${escapeHtml(filterName)}</div>
+            <div><strong>출력 일시:</strong> ${escapeHtml(nowFormatted)}</div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:14px;">
+          <div style="font-size:13px; font-weight:800; color:#0F172A; margin-bottom:8px;">1. 핵심 요약 지표 (KPI)</div>
+          <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:8px;">
+            <div style="border:1px solid #CBD5E1; border-radius:10px; padding:10px 12px; background:#F8FAFC;">
+              <div style="font-size:10.5px; color:#475569; font-weight:700;">총 설문 응답 수</div>
+              <div style="font-size:18px; font-weight:900; color:#0F172A; margin:3px 0;">${kpi.totalResponses}명</div>
+              <div style="font-size:9.5px; color:#64748B;">Q1~Q7 완료 즉시 수집</div>
+            </div>
+            <div style="border:1px solid #CBD5E1; border-radius:10px; padding:10px 12px; background:#F8FAFC;">
+              <div style="font-size:10.5px; color:#475569; font-weight:700;">초기 테스트 신청자</div>
+              <div style="font-size:18px; font-weight:900; color:#0D9488; margin:3px 0;">${kpi.totalLeads}명</div>
+              <div style="font-size:9.5px; color:#64748B;">전환율 ${kpi.conversionRate}%</div>
+            </div>
+            <div style="border:1px solid #CBD5E1; border-radius:10px; padding:10px 12px; background:#F8FAFC;">
+              <div style="font-size:10.5px; color:#475569; font-weight:700;">10분 인터뷰 가능</div>
+              <div style="font-size:18px; font-weight:900; color:#0D9488; margin:3px 0;">${kpi.interviewAvailableCount}명</div>
+              <div style="font-size:9.5px; color:#64748B;">시제품 인터뷰 대상</div>
+            </div>
+            <div style="border:1px solid #CBD5E1; border-radius:10px; padding:10px 12px; background:#F8FAFC;">
+              <div style="font-size:10.5px; color:#475569; font-weight:700;">최근 6개월 재확인 비율</div>
+              <div style="font-size:18px; font-weight:900; color:#EA580C; margin:3px 0;">${kpi.consentAwareRate}%</div>
+              <div style="font-size:9.5px; color:#64748B;">${kpi.consentAwareCount}명 / 전체 ${kpi.totalResponses}명</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:14px;">
+          <div style="font-size:13px; font-weight:800; color:#0F172A; margin-bottom:8px;">2. 부모님 건강기록 관리 습관 유형 분포 (4가지 유형)</div>
+          <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;">
+            ${typeBoxesHtml}
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:13px; font-weight:800; color:#0F172A; margin-bottom:8px;">3. 문항별 상세 응답 비율 (Q1 ~ Q4)</div>
+          <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:10px;">
+            ${buildPdfQuestionCardHtml('Q1', questionStats.Q1)}
+            ${buildPdfQuestionCardHtml('Q2', questionStats.Q2)}
+            ${buildPdfQuestionCardHtml('Q3', questionStats.Q3)}
+            ${buildPdfQuestionCardHtml('Q4', questionStats.Q4)}
+          </div>
+        </div>
+      `;
+      stage.appendChild(page1);
+      pages.push(page1);
+
+      // ==================== [페이지 2] 문항별 상세 응답 비율 (Q5~Q7) + 신청자 명단 ====================
+      const page2 = createA4SheetContainer();
+      const leadsRowsHtml =
+        leads && leads.length > 0
+          ? leads
+              .map(
+                (l) => `
+              <tr>
+                <td style="padding:6px 7px; border-bottom:1px solid #E2E8F0; font-size:10.5px;">${l.isSeed ? '[시연용 Seed]' : '<strong>[실제 Real]</strong>'}</td>
+                <td style="padding:6px 7px; border-bottom:1px solid #E2E8F0; font-size:10.5px;">${escapeHtml(formatDateTime(l.createdAt))}</td>
+                <td style="padding:6px 7px; border-bottom:1px solid #E2E8F0; font-size:10.5px; font-weight:700;">${escapeHtml(l.nickname)}</td>
+                <td style="padding:6px 7px; border-bottom:1px solid #E2E8F0; font-size:10.5px;">${escapeHtml(l.contact)}</td>
+                <td style="padding:6px 7px; border-bottom:1px solid #E2E8F0; font-size:10.5px;">${l.interviewAvailable ? '가능 (O)' : '미선택'}</td>
+                <td style="padding:6px 7px; border-bottom:1px solid #E2E8F0; font-size:10.5px;">${l.privacyConsent ? '동의함' : '미동의'}</td>
+              </tr>
+            `
+              )
+              .join('')
+          : `<tr><td colspan="6" style="padding:14px; text-align:center; font-size:11px; color:#64748B;">해당 필터 조건에 맞는 초기 테스트 신청 내역이 없습니다.</td></tr>`;
+
+      page2.innerHTML = `
+        <div style="margin-bottom:16px;">
+          <div style="font-size:13px; font-weight:800; color:#0F172A; margin-bottom:8px;">3-B. 문항별 상세 응답 비율 (Q5 ~ Q7 연령대)</div>
+          <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:10px;">
+            ${buildPdfQuestionCardHtml('Q5', questionStats.Q5)}
+            ${buildPdfQuestionCardHtml('Q6', questionStats.Q6)}
+            ${questionStats.Q7 ? buildPdfQuestionCardHtml('Q7', questionStats.Q7) : ''}
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:13px; font-weight:800; color:#0F172A; margin-bottom:8px;">4. 초기 테스트 & 인터뷰 신청자 명단 (총 ${(leads || []).length}건)</div>
+          <table style="width:100%; border-collapse:collapse; table-layout:fixed; border:1px solid #CBD5E1;">
+            <thead>
+              <tr style="background:#F1F5F9;">
+                <th style="width:14%; padding:7px; border-bottom:1px solid #CBD5E1; font-size:10.5px; text-align:left;">구분</th>
+                <th style="width:20%; padding:7px; border-bottom:1px solid #CBD5E1; font-size:10.5px; text-align:left;">신청 일시</th>
+                <th style="width:16%; padding:7px; border-bottom:1px solid #CBD5E1; font-size:10.5px; text-align:left;">닉네임</th>
+                <th style="width:24%; padding:7px; border-bottom:1px solid #CBD5E1; font-size:10.5px; text-align:left;">연락처</th>
+                <th style="width:13%; padding:7px; border-bottom:1px solid #CBD5E1; font-size:10.5px; text-align:left;">인터뷰 가능</th>
+                <th style="width:13%; padding:7px; border-bottom:1px solid #CBD5E1; font-size:10.5px; text-align:left;">개인정보 동의</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${leadsRowsHtml}
+            </tbody>
+          </table>
+        </div>
+      `;
+      stage.appendChild(page2);
+      pages.push(page2);
+
+      // ==================== [페이지 3+] 익명 설문 응답 전체 내역 (12건씩 자동 페이지 분할) ====================
+      const HABIT_TYPE_LABELS = {
+        type1: '마음만은 든든, 기억·대화 중심 확인형',
+        type2: '사진첩·단톡방 스크롤 탐정형',
+        type3: '수첩·메모장 꼼꼼 기록 매니저형',
+        type4: '체계적인 스마트 동행 기록 프로형'
+      };
+
+      const respList = responses || [];
+      const pageSize = 12;
+      const totalChunks = Math.max(1, Math.ceil(respList.length / pageSize));
+
+      for (let c = 0; c < totalChunks; c++) {
+        const slice = respList.slice(c * pageSize, (c + 1) * pageSize);
+        const respPage = createA4SheetContainer();
+
+        const rowsHtml =
+          slice.length > 0
+            ? slice
+                .map((resp) => {
+                  const cleanTypeName = HABIT_TYPE_LABELS[resp.habitType] || resp.habitTypeName || '-';
+                  const q4Label = SHORT_LABELS[resp.answers?.Q4] || resp.answers?.Q4 || '-';
+                  const q5Label = SHORT_LABELS[resp.answers?.Q5] || resp.answers?.Q5 || '-';
+                  const q6Label = SHORT_LABELS[resp.answers?.Q6] || resp.answers?.Q6 || '-';
+                  const q7Label = SHORT_LABELS[resp.answers?.Q7] || resp.answers?.Q7 || '-';
+                  const vocText = resp.vocComment && resp.vocComment.trim() ? resp.vocComment.trim() : '-';
+                  return `
+                  <tr>
+                    <td style="padding:6px 5px; border-bottom:1px solid #E2E8F0; font-size:9.5px; word-break:keep-all;">${resp.isSeed ? '[Seed]' : '<strong>[Real]</strong>'}</td>
+                    <td style="padding:6px 5px; border-bottom:1px solid #E2E8F0; font-size:9.5px;">${escapeHtml(formatDateTime(resp.createdAt))}</td>
+                    <td style="padding:6px 5px; border-bottom:1px solid #E2E8F0; font-size:9.5px; font-weight:700;">${escapeHtml(q7Label)}</td>
+                    <td style="padding:6px 5px; border-bottom:1px solid #E2E8F0; font-size:9.5px; font-weight:700; word-break:keep-all;">${escapeHtml(cleanTypeName)}</td>
+                    <td style="padding:6px 5px; border-bottom:1px solid #E2E8F0; font-size:9.5px; word-break:keep-all;">${escapeHtml(q4Label)}</td>
+                    <td style="padding:6px 5px; border-bottom:1px solid #E2E8F0; font-size:9.5px; word-break:keep-all;">${escapeHtml(q5Label)}</td>
+                    <td style="padding:6px 5px; border-bottom:1px solid #E2E8F0; font-size:9.5px; word-break:keep-all;">${escapeHtml(q6Label)}</td>
+                    <td style="padding:6px 5px; border-bottom:1px solid #E2E8F0; font-size:9.5px; word-break:break-word; color:#0F766E;">${escapeHtml(vocText)}</td>
+                  </tr>
+                `;
+                })
+                .join('')
+            : `<tr><td colspan="8" style="padding:16px; text-align:center; font-size:11px; color:#64748B;">설문 응답 내역이 없습니다.</td></tr>`;
+
+        respPage.innerHTML = `
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <div style="font-size:13px; font-weight:800; color:#0F172A;">
+                5. 실시간 익명 설문 응답 & 1줄 자유응답(VOC) 내역 (${c + 1} / ${totalChunks} 페이지 · 총 ${respList.length}건)
+              </div>
+              <div style="font-size:10px; color:#64748B;">${escapeHtml(filterName)}</div>
+            </div>
+            <table style="width:100%; border-collapse:collapse; table-layout:fixed; border:1px solid #CBD5E1;">
+              <thead>
+                <tr style="background:#F1F5F9;">
+                  <th style="width:7%; padding:6px 5px; border-bottom:1px solid #CBD5E1; font-size:9.5px; text-align:left;">구분</th>
+                  <th style="width:14%; padding:6px 5px; border-bottom:1px solid #CBD5E1; font-size:9.5px; text-align:left;">참여 일시</th>
+                  <th style="width:8%; padding:6px 5px; border-bottom:1px solid #CBD5E1; font-size:9.5px; text-align:left;">연령대</th>
+                  <th style="width:18%; padding:6px 5px; border-bottom:1px solid #CBD5E1; font-size:9.5px; text-align:left;">습관 유형</th>
+                  <th style="width:16%; padding:6px 5px; border-bottom:1px solid #CBD5E1; font-size:9.5px; text-align:left;">Q4 공유 범위</th>
+                  <th style="width:13%; padding:6px 5px; border-bottom:1px solid #CBD5E1; font-size:9.5px; text-align:left;">Q5 필요 기능</th>
+                  <th style="width:9%; padding:6px 5px; border-bottom:1px solid #CBD5E1; font-size:9.5px; text-align:left;">Q6 빈도</th>
+                  <th style="width:15%; padding:6px 5px; border-bottom:1px solid #CBD5E1; font-size:9.5px; text-align:left;">1줄 자유응답(VOC)</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rowsHtml}
+              </tbody>
+            </table>
+          </div>
+        `;
+        stage.appendChild(respPage);
+        pages.push(respPage);
+      }
+
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+      for (let i = 0; i < pages.length; i++) {
+        if (i > 0) pdf.addPage();
+        const canvas = await window.html2canvas(pages[i], {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#FFFFFF',
+          width: 794,
+          windowWidth: 1024,
+          x: 0,
+          scrollX: 0,
+          scrollY: 0
+        });
+        const imgData = canvas.toDataURL('image/jpeg', 0.96);
+        let imgW = 196; // A4 210mm - 좌우 여백 7mm씩
+        let imgH = (canvas.height * imgW) / canvas.width;
+        if (imgH > 283) {
+          const ratio = 283 / imgH;
+          imgH = 283;
+          imgW = imgW * ratio;
+        }
+        const xOffset = (210 - imgW) / 2;
+        pdf.addImage(imgData, 'JPEG', xOffset, 7, imgW, imgH);
+      }
+
+      pdf.save(`Check_수요조사_대시보드리포트_${currentFilter}_${dateStr}.pdf`);
+    } catch (err) {
+      alert('PDF 파일 생성 중 오류가 발생했습니다.');
+    } finally {
+      if (stage.parentNode) stage.parentNode.removeChild(stage);
+      btnExportPdf.disabled = false;
+      btnExportPdf.innerHTML = origText;
+    }
+  }
+
   if (btnExportPdf) {
-    btnExportPdf.addEventListener('click', async () => {
-      if (typeof window.html2pdf === 'undefined') {
-        alert('PDF 생성 라이브러리를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');
-        return;
-      }
-      const origText = btnExportPdf.innerHTML;
-      btnExportPdf.disabled = true;
-      btnExportPdf.innerHTML = '⏳ PDF 파일 생성 중... (약 3초)';
-
-      const dateStr = new Date().toISOString().slice(0, 10);
-      const fileName = `Check_수요조사_대시보드리포트_${currentFilter}_${dateStr}.pdf`;
-
-      document.body.classList.add('pdf-export-mode');
-      window.scrollTo(0, 0);
-
-      try {
-        const opt = {
-          margin: [8, 8, 8, 8],
-          filename: fileName,
-          image: { type: 'jpeg', quality: 0.96 },
-          html2canvas: {
-            scale: 2,
-            useCORS: true,
-            backgroundColor: '#FFFFFF',
-            scrollY: 0,
-            windowWidth: 1020
-          },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-          pagebreak: { mode: ['css', 'legacy'] }
-        };
-        await window.html2pdf().set(opt).from(dashboardView).save();
-      } catch (err) {
-        alert('PDF 파일 생성 중 오류가 발생했습니다.');
-      } finally {
-        document.body.classList.remove('pdf-export-mode');
-        btnExportPdf.disabled = false;
-        btnExportPdf.innerHTML = origText;
-      }
-    });
+    btnExportPdf.addEventListener('click', generateCleanA4Pdf);
   }
 
   // 2) 리포트 인쇄 (프린터 출력 전용 별도 버튼)
