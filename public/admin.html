@@ -704,7 +704,44 @@
       gap: 6px;
     }
 
-    /* ==================== PDF 리포트 저장 / 인쇄 전용 스타일 ==================== */
+    /* ==================== PDF 파일 직접 다운로드 캡처 전용 스타일 ==================== */
+    body.pdf-export-mode {
+      background: #FFFFFF !important;
+    }
+    body.pdf-export-mode .admin-container {
+      max-width: 980px !important;
+      width: 980px !important;
+      margin: 0 auto !important;
+      padding: 16px !important;
+      background: #FFFFFF !important;
+    }
+    body.pdf-export-mode .admin-header-actions,
+    body.pdf-export-mode .filter-toggle-bar,
+    body.pdf-export-mode .csv-export-bar,
+    body.pdf-export-mode #viral-kit-panel,
+    body.pdf-export-mode .btn-delete-row,
+    body.pdf-export-mode .admin-table th:last-child,
+    body.pdf-export-mode .admin-table td:last-child {
+      display: none !important;
+    }
+    body.pdf-export-mode .panel {
+      break-inside: avoid;
+      page-break-inside: avoid;
+      box-shadow: none !important;
+      border: 1px solid #CBD5E1 !important;
+      margin-bottom: 16px !important;
+      padding: 16px !important;
+    }
+    body.pdf-export-mode .table-responsive {
+      overflow: visible !important;
+    }
+    body.pdf-export-mode .admin-table {
+      min-width: 100% !important;
+      width: 100% !important;
+      font-size: 0.78rem !important;
+    }
+
+    /* ==================== 인쇄 전용 스타일 ==================== */
     @media print {
       * {
         -webkit-print-color-adjust: exact !important;
@@ -837,10 +874,13 @@
       </div>
       <div class="csv-buttons">
         <button type="button" id="btn-export-responses" class="btn-csv">
-          📊 엑셀(CSV) 종합 정리본 다운로드 (통계요약+응답내역)
+          📊 엑셀(CSV) 종합 정리본 다운로드
         </button>
-        <button type="button" id="btn-export-pdf" class="btn-csv" style="background:#F0FDFA; color:#0F766E; border:1.5px solid #99F6E4;">
-          📄 대시보드 PDF 리포트 저장 (인쇄)
+        <button type="button" id="btn-export-pdf" class="btn-csv" style="background:#0F766E; color:#FFFFFF; border:1.5px solid #0F766E;">
+          📄 대시보드 PDF 파일 다운로드
+        </button>
+        <button type="button" id="btn-print-report" class="btn-csv" style="background:#F8FAFC; color:#334155; border:1.5px solid #CBD5E1;">
+          🖨️ 리포트 인쇄
         </button>
         <button type="button" id="btn-export-leads" class="btn-csv leads-btn">
           📇 초기 테스트 신청자 명단 엑셀(CSV)
@@ -1020,7 +1060,8 @@ https://check-research.surge.sh</textarea>
     </section>
   </div>
 
-  <script src="/js/api-client.js?v=20261026_v12"></script>
-  <script src="/js/admin.js?v=20261026_v12"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="/js/api-client.js?v=20261027_v13"></script>
+  <script src="/js/admin.js?v=20261027_v13"></script>
 </body>
 </html>

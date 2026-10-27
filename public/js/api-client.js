@@ -39,9 +39,26 @@
     type4: '체계적인 스마트 동행 기록 프로형'
   };
 
-  // 현재까지 확보된 실제 고객 응답 16건 (어제 저녁 50대 1건 + 30대 사전동의 1건 복원 및 오늘 14:54 응답 포함) 영구 내장
+  // 현재까지 확보된 실제 고객 응답 17건 (오늘 10:46 응답 포함) 영구 내장
   function getInitialRealResponses() {
     return [
+      {
+        id: 'resp-1793065594968-f481',
+        createdAt: '2026-10-27T01:46:34.968Z',
+        isSeed: false,
+        answers: {
+          Q1: 'exp_multi_meds',
+          Q2: 'store_memo',
+          Q3: 'recheck_symptom_date',
+          Q4: 'share_visit_summary',
+          Q5: 'feat_visit_card',
+          Q6: 'freq_1_2',
+          Q7: 'age_30s'
+        },
+        habitType: 'type3',
+        habitTypeName: HABIT_TYPE_META.type3,
+        vocComment: ''
+      },
       {
         id: 'resp-1792994065727-4b9b',
         createdAt: '2026-10-26T05:54:25.727Z',

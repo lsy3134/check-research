@@ -45,6 +45,7 @@
   const btnLogout = document.getElementById('btn-logout');
   const btnExportResponses = document.getElementById('btn-export-responses');
   const btnExportPdf = document.getElementById('btn-export-pdf');
+  const btnPrintReport = document.getElementById('btn-print-report');
   const btnExportLeads = document.getElementById('btn-export-leads');
 
   let currentPassword = sessionStorage.getItem(SESSION_KEY) || '';
@@ -495,8 +496,52 @@
   btnExportResponses.addEventListener('click', () => downloadCsv('responses'));
   btnExportLeads.addEventListener('click', () => downloadCsv('leads'));
 
+  // 1) PDF 파일 직접 다운로드 (인쇄 창을 띄우지 않고 즉시 .pdf 파일로 생성 및 다운로드)
   if (btnExportPdf) {
-    btnExportPdf.addEventListener('click', () => {
+    btnExportPdf.addEventListener('click', async () => {
+      if (typeof window.html2pdf === 'undefined') {
+        alert('PDF 생성 라이브러리를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');
+        return;
+      }
+      const origText = btnExportPdf.innerHTML;
+      btnExportPdf.disabled = true;
+      btnExportPdf.innerHTML = '⏳ PDF 파일 생성 중... (약 3초)';
+
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const fileName = `Check_수요조사_대시보드리포트_${currentFilter}_${dateStr}.pdf`;
+
+      document.body.classList.add('pdf-export-mode');
+      window.scrollTo(0, 0);
+
+      try {
+        const opt = {
+          margin: [8, 8, 8, 8],
+          filename: fileName,
+          image: { type: 'jpeg', quality: 0.96 },
+          html2canvas: {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: '#FFFFFF',
+            scrollY: 0,
+            windowWidth: 1020
+          },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+          pagebreak: { mode: ['css', 'legacy'] }
+        };
+        await window.html2pdf().set(opt).from(dashboardView).save();
+      } catch (err) {
+        alert('PDF 파일 생성 중 오류가 발생했습니다.');
+      } finally {
+        document.body.classList.remove('pdf-export-mode');
+        btnExportPdf.disabled = false;
+        btnExportPdf.innerHTML = origText;
+      }
+    });
+  }
+
+  // 2) 리포트 인쇄 (프린터 출력 전용 별도 버튼)
+  if (btnPrintReport) {
+    btnPrintReport.addEventListener('click', () => {
       const origTitle = document.title;
       const dateStr = new Date().toISOString().slice(0, 10);
       document.title = `Check_수요조사_대시보드리포트_${currentFilter}_${dateStr}`;
